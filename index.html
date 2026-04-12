@@ -2,192 +2,198 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nova Tech | V13 Abomination</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Tech</title>
     <link rel="icon" type="image/png" href="icon.png">
     
     <style>
         :root { 
             --liquid-glass: rgba(255, 255, 255, 0.08); 
             --border-glow: rgba(255, 255, 255, 0.15); 
-            --accent: #00a2ff;
         }
         
         body, html { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; }
 
-        /* Viewport Navigation - 4 Screens now: Home, Sonic, Comms, Inbox */
-        #viewport { display: flex; width: 400vw; height: 100vh; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); }
+        /* Viewport Navigation - Expanded to 300vw for 3 screens */
+        #viewport { display: flex; width: 300vw; height: 100vh; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); }
         .screen { width: 100vw; height: 100vh; background-size: cover; background-position: center; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
 
-        /* Dynamic Backgrounds */
+        /* Backgrounds */
         #main-screen { background-image: url('phone.png'); }
-        #games-screen { background-color: #050505; background-image: url('games.png'); }
-        #comms-screen { background-color: #080808; background-image: url('phone.png'); filter: hue-rotate(45deg); }
-        #inbox-screen { background-color: #030303; }
+        #games-screen { background-image: url('games.png'); background-color: #050505; }
+        #comms-screen { background-image: url('phone.png'); background-color: #080808; filter: hue-rotate(45deg); } /* Distinct look for comms */
 
-        /* Mobile Asset Overrides */
-        @media (max-width: 1024px) {
-            #main-screen { background-image: url('phoneandroid.png') !important; }
-            #games-screen { background-image: url('gamesandroid.png') !important; }
-            #comms-screen { background-image: url('phoneandroid.png') !important; }
+        @media (max-width: 1024px) and (orientation: portrait) {
+            #main-screen { background-image: url('phoneandroid.png'); }
+            #games-screen { background-image: url('gamesandroid.png'); }
+            #comms-screen { background-image: url('phoneandroid.png'); }
         }
 
         /* Nav Bar */
         nav {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center; padding: 12px 25px;
-            border-radius: 15px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px);
+            border-radius: 15px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);
             border: 1px solid var(--border-glow); z-index: 1000; transition: all 0.6s ease-in-out;
         }
-        .nav-side-mode { left: 30px; transform: translateX(0); align-items: flex-start; }
-        .nav-buttons { display: flex; gap: 8px; }
         
-        button { background: #111; border: 1px solid #333; color: #888; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 11px; transition: 0.3s; }
-        button.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 15px rgba(0,162,255,0.4); }
+        .nav-side-mode { left: 30px; transform: translateX(0); align-items: flex-start; }
+        .nav-buttons { display: flex; gap: 10px; }
+        button { background: #111; border: 1px solid #333; color: #888; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        button.active { background: #fff; color: #000; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
 
-        /* Controls & Selectors */
+        /* Controls */
         .controls-bar {
-            margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
-            padding: 15px; border-radius: 12px; background: var(--liquid-glass); backdrop-filter: blur(20px);
+            margin-bottom: 15px; display: flex; gap: 12px; align-items: center;
+            padding: 12px 20px; border-radius: 12px;
+            background: var(--liquid-glass); backdrop-filter: blur(25px) saturate(160%);
             border: 1px solid var(--border-glow); z-index: 10;
         }
 
-        select, .action-btn { background: rgba(0,0,0,0.8); color: white; border: 1px solid #444; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        select, .action-btn { background: rgba(0,0,0,0.6); color: white; border: 1px solid #444; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
         .action-btn:hover { background: #fff; color: #000; }
 
-        /* Emulator / Game Container */
+        /* Help Button Specific */
+        #helpBtn { font-weight: bold; border-color: rgba(255,255,255,0.3); }
+
+        /* Transparent Help Overlay */
+        #helpOverlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 2000; transition: 0.3s;
+        }
+        .help-content {
+            background: var(--liquid-glass); border: 1px solid var(--border-glow);
+            padding: 30px; border-radius: 20px; text-align: center; max-width: 300px;
+        }
+        .help-content h2 { margin-top: 0; letter-spacing: 2px; font-size: 18px; }
+        .help-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; font-family: monospace; }
+        .help-grid div { padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        /* Emulator Container */
         #emu-container { 
-            width: 90%; max-width: 900px; height: 500px; 
+            width: 90%; max-width: 854px; height: 480px; 
             background: #000; border-radius: 12px; overflow: hidden; 
-            border: 1px solid #333; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid #222; position: relative;
         }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* Inbox Card Style */
-        .inbox-card {
-            background: var(--liquid-glass); border: 1px solid var(--border-glow);
-            padding: 20px; border-radius: 12px; width: 80%; max-width: 400px; margin-top: 15px;
+        /* Status Terminal */
+        #status-bar {
+            width: 100%; background: #000; color: #0f0; font-family: monospace;
+            font-size: 11px; padding: 6px 15px; box-sizing: border-box; border-top: 1px solid #222;
         }
-        .coming-soon { color: #555; font-style: italic; border: 1px dashed #333; }
 
-        #status-bar { width: 100%; background: #000; color: #0f0; font-family: monospace; font-size: 11px; padding: 8px 15px; border-top: 1px solid #222; }
+        /* Comms System Styles */
+        .comms-card { 
+            background: var(--liquid-glass); backdrop-filter: blur(20px); 
+            border: 1px solid var(--border-glow); border-radius: 15px; 
+            padding: 2rem; width: 90%; max-width: 500px; 
+        }
+        .msg-input { flex-grow: 1; background: rgba(0,0,0,0.6); border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; outline: none; }
+        .msg-btn { background: #fff; color: #000; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .msg-btn:hover { background: #0f0; box-shadow: 0 0 20px rgba(0,255,0,0.4); }
     </style>
 </head>
 <body>
 
+<div id="helpOverlay" onclick="toggleHelp()">
+    <div class="help-content" onclick="event.stopPropagation()">
+        <h2>CONTROLS</h2>
+        <div class="help-grid">
+            <div style="text-align:right; color:#888;">Move:</div> <div style="text-align:left;">Arrows</div>
+            <div style="text-align:right; color:#888;">Start:</div> <div style="text-align:left;">Enter</div>
+            <div style="text-align:right; color:#888;">Buttons:</div> <div style="text-align:left;">X / Z / S</div>
+            <div style="text-align:right; color:#888;">Select:</div> <div style="text-align:left;">Shift</div>
+        </div>
+        <button class="action-btn" onclick="toggleHelp()">CLOSE</button>
+    </div>
+</div>
+
 <nav id="mainNav">
-    <h1 style="margin:0 0 5px 0; font-size:0.5rem; letter-spacing:5px; color: var(--accent);">NOVA TECH V13</h1>
+    <h1 style="margin:0 0 5px 0; font-size:0.6rem; letter-spacing:4px; opacity: 0.5;">NOVA TECH</h1>
     <div class="nav-buttons">
-        <button onclick="slideTo('main', 0)" id="btn-0" class="active">HOME</button>
-        <button onclick="slideTo('games', 1)" id="btn-1">ENGINES</button>
-        <button onclick="slideTo('comms', 2)" id="btn-2">COMMS</button>
-        <button onclick="slideTo('inbox', 3)" id="btn-3">INBOX</button>
+        <button onclick="slideTo('main')" id="btn-main" class="active">MAIN</button>
+        <button onclick="slideTo('games')" id="btn-games">SONIC</button>
+        <button onclick="slideTo('comms')" id="btn-comms">COMMS</button>
     </div>
 </nav>
 
 <div id="viewport">
-    <div id="main-screen" class="screen">
-        <img src="icon.png" style="width: 80px; filter: drop-shadow(0 0 10px var(--accent));">
-        <h2 style="letter-spacing: 8px; margin-top: 20px;">STATION ONLINE</h2>
-        <p style="font-family: monospace; font-size: 0.7rem; color: #444;">USER: WILDCAT-DEV | NODE: DHAKA</p>
-    </div>
+    <!-- SCREEN 1: HOME (UNCHANGED) -->
+    <div id="main-screen" class="screen"></div>
 
+    <!-- SCREEN 2: SONIC (UNCHANGED) -->
     <div id="games-screen" class="screen"> 
         <div class="controls-bar">
-            <select id="engineType" onchange="updateEngineList()">
-                <option value="rsdkv5">RSDK v5 (Mania)</option>
-                <option value="rsdkv3">RSDK v3 (Sonic CD)</option>
-                <option value="retroarch">RetroArch (S1/S2)</option>
-            </select>
-            
             <select id="gameSelect">
-                </select>
-
-            <button class="action-btn" onclick="bootEngine()" style="background: var(--accent);">INITIALIZE</button>
+                <option value="sonic1.zip">Sonic 1</option>
+                <option value="sonic2.zip">Sonic 2</option>
+            </select>
+            <select id="coreSelect">
+                <option value="genesis_plus_gx_libretro.js">Standard Core</option>
+                <option value="genesis_plus_gx_wide_libretro.js">Widescreen Core</option>
+            </select>
+            <button class="action-btn" onclick="bootRetroArch()">INITIALIZE</button>
+            <button class="action-btn" id="helpBtn" onclick="toggleHelp()">?</button>
         </div>
-
         <div id="emu-container">
-            <div id="iframe-target" style="width:100%; height:calc(100% - 27px);">
-                <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#222; font-weight:bold;">ENGINE STANDBY</div>
-            </div>
-            <div id="status-bar">> KERNEL IDLE. WAITING FOR BOOT SEQUENCE...</div>
+            <div id="iframe-target" style="width:100%; height:calc(100% - 27px);"></div>
+            <div id="status-bar">> KERNEL STANDBY. READY FOR INJECTION.</div>
         </div>
     </div>
 
+    <!-- SCREEN 3: ULTRA POWERFUL COMMS SYSTEM -->
     <div id="comms-screen" class="screen">
         <h2 style="letter-spacing: 5px; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 20px;">Ultra powerful comms system</h2>
-        <div class="controls-bar" style="width: 90%; max-width: 500px;">
-            <input type="text" id="msg" class="msg-input" style="flex-grow:1; background:none; border:none; color:white; outline:none;" placeholder="Secure line open...">
-            <button onclick="sendMessage()" class="action-btn">SEND</button>
-        </div>
-    </div>
-
-    <div id="inbox-screen" class="screen">
-        <h2 style="letter-spacing: 5px; font-size: 0.8rem;">STATION INBOX</h2>
-        <div class="inbox-card">
-            <strong style="color:var(--accent);">System Architect</strong><br>
-            <small style="font-size: 0.6rem; color: #666;">Sent: 12:28 AM</small>
-            <p style="font-size: 0.8rem;">V13 Abomination Build successfully pushed to GitHub. LFS link for Mania/Data.rsdk confirmed.</p>
-        </div>
-        <div class="inbox-card coming-soon">
-            <strong>Internal Comms</strong><br>
-            <p style="font-size: 0.8rem;">Project "Broken Things" Inbox functionality coming soon...</p>
+        <div class="comms-card">
+            <p style="font-family: monospace; font-size: 0.7rem; color: #888; margin-bottom: 1rem;">ANONYMOUS_WEBHOOK_TRANSMISSION</p>
+            <div style="display: flex; gap: 12px;">
+                <input type="text" id="msg" class="msg-input" placeholder="Secure line open. Enter message...">
+                <button onclick="sendMessage()" class="msg-btn">SEND</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const engineConfig = {
-        rsdkv5: [{ name: "Sonic Mania", file: "Mania/index.html" }],
-        rsdkv3: [{ name: "Sonic CD", file: "CD/index.html" }],
-        retroarch: [
-            { name: "Sonic 1", file: "sonic1.zip" },
-            { name: "Sonic 2", file: "sonic2.zip" }
-        ]
-    };
+    function updateStatus(msg) { document.getElementById('status-bar').innerText = "> " + msg.toUpperCase(); }
 
-    function updateEngineList() {
-        const type = document.getElementById('engineType').value;
-        const selector = document.getElementById('gameSelect');
-        selector.innerHTML = '';
-        engineConfig[type].forEach(game => {
-            let opt = document.createElement('option');
-            opt.value = game.file;
-            opt.innerHTML = game.name;
-            selector.appendChild(opt);
-        });
+    function toggleHelp() {
+        const overlay = document.getElementById('helpOverlay');
+        overlay.style.display = (overlay.style.display === 'flex') ? 'none' : 'flex';
     }
 
-    function bootEngine() {
-        const type = document.getElementById('engineType').value;
-        const file = document.getElementById('gameSelect').value;
-        const target = document.getElementById('iframe-target');
-        const status = document.getElementById('status-bar');
-
-        status.innerText = "> BOOTING " + type.toUpperCase() + "...";
-        target.innerHTML = `<iframe src="${file}"></iframe>`;
-    }
-
-    function slideTo(name, index) {
+    function slideTo(screen) {
         const vp = document.getElementById('viewport');
         const nav = document.getElementById('mainNav');
         
-        vp.style.transform = `translateX(-${index * 100}vw)`;
-        
-        // Handle side-mode for screens 1, 2, and 3
-        if (index > 0) nav.classList.add('nav-side-mode');
-        else nav.classList.remove('nav-side-mode');
+        // Reset all buttons
+        document.getElementById('btn-main').className = '';
+        document.getElementById('btn-games').className = '';
+        document.getElementById('btn-comms').className = '';
 
-        // Update Buttons
-        document.querySelectorAll('.nav-buttons button').forEach((btn, i) => {
-            btn.className = (i === index) ? 'active' : '';
-        });
+        if (screen === 'main') {
+            vp.style.transform = 'translateX(0)';
+            nav.classList.remove('nav-side-mode');
+            document.getElementById('btn-main').className = 'active';
+        } else if (screen === 'games') {
+            vp.style.transform = 'translateX(-100vw)';
+            nav.classList.add('nav-side-mode');
+            document.getElementById('btn-games').className = 'active';
+        } else if (screen === 'comms') {
+            vp.style.transform = 'translateX(-200vw)';
+            nav.classList.add('nav-side-mode');
+            document.getElementById('btn-comms').className = 'active';
+        }
     }
 
+    // Webhook Comms Function
     function sendMessage() {
         const input = document.getElementById("msg");
         const message = input.value.trim();
-        if (!message) return;
+        if (!message) { alert("Buffer empty. Please enter text."); return; }
 
         fetch("https://discord.com/api/webhooks/1492850737103765505/jV5m5oiaZjVpx95d_w3hhNOm09F-e113L4l61lSVBemtIETbQiFAm2wwabb33fIXf9Sw", {
             method: "POST",
@@ -195,13 +201,50 @@
             body: JSON.stringify({ content: message })
         })
         .then(res => {
-            if (res.ok) { input.value = ""; alert("Transmission Sent."); }
-        });
+            if (res.ok) {
+                input.value = "";
+                alert("Transmission Sent ✅");
+            } else { alert("Link Refused."); }
+        })
+        .catch(err => { console.error(err); alert("Critical link failure."); });
     }
 
-    // Initialize the engine list on load
-    updateEngineList();
-</script>
+    document.getElementById("msg")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
 
+    function bootRetroArch() {
+        const game = document.getElementById('gameSelect').value;
+        const core = document.getElementById('coreSelect').value;
+        if (!game || !core) return;
+        updateStatus("Mounting " + core + "...");
+        const target = document.getElementById('iframe-target');
+        target.innerHTML = ''; 
+        const iframe = document.createElement('iframe');
+        target.appendChild(iframe);
+        const rootPath = window.location.origin + window.location.pathname.replace('index.html', '');
+        const pageSource = `
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><style>body,html{margin:0;padding:0;overflow:hidden;background:#000;width:100%;height:100%;}</style></head>
+            <body>
+                <canvas id="canvas" style="width:100vw; height:100vh;"></canvas>
+                <script>
+                    var Module = {
+                        canvas: document.getElementById('canvas'),
+                        arguments: ["/rom/${game}"],
+                        preRun: [function() { Module.FS_createPreloadedFile("/", "${game}", "${rootPath}${game}", true, false); }],
+                        postRun: [],
+                        onRuntimeInitialized: function() { console.log("RetroArch Online."); }
+                    };
+                <\/script>
+                <script src="https://web.libretro.com/cores/${core}"><\/script>
+            </body>
+            </html>
+        `;
+        iframe.srcdoc = pageSource;
+        updateStatus("Module Running: " + game);
+    }
+</script>
 </body>
 </html>
