@@ -1,0 +1,9 @@
+# Secret Keys
+.env
+
+# Python junk
+__pycache__/
+*.pyc
+
+# Local settings
+.vscode/
