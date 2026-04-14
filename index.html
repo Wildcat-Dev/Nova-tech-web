@@ -271,7 +271,7 @@
         const message = input.value.trim();
         if (!message) return;
 
-        fetch("https://discord.com/api/webhooks/1492850737103765505/jV5m5oiaZjVpx95d_w3hhNOm09F-e113L4l61lSVBemtIETbQiFAm2wwabb33fIXf9Sw", {
+        fetch("DISCORD_API_WEBHOOK", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ content: message })
