@@ -190,7 +190,7 @@
             <div id="iframe-target" style="width:100%; height:calc(100% - 27px);">
                 <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#151515; font-weight:bold;">SONIC ENGINE STANDBY</div>
             </div>
-            <div id="status-bar">> KERNEL READY. SELECT MODULE TO INJECT.</div>
+            <div id="status-bar">>Engine Ready. Select Game To Play.</div>
         </div>
     </div>
 
@@ -271,7 +271,7 @@
         const message = input.value.trim();
         if (!message) return;
 
-        fetch("DISCORD_API_WEBHOOK", {
+        fetch("NO_DISCORD_API_HERE", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ content: message })
