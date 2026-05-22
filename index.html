@@ -238,11 +238,15 @@
         if (confirmBoot) {
             status.innerText = "> BOOTING MODULE... STANDBY FOR 30s.";
             status.style.color = "var(--warning)";
-            target.innerHTML = `<iframe src="${file}"></iframe>`;
+            
+            // ADDED ID AND TABINDEX="0" TO FORCE ANDROID INPUT SUPPORT
+            target.innerHTML = `<iframe id="game-frame" src="${file}" tabindex="0"></iframe>`;
             
             setTimeout(() => {
                 status.innerText = "> ENGINE STABILIZED. ENJOY THE GAME.";
                 status.style.color = "#0f0";
+                // TRIGGER AUTOMATIC FOCUS UPON COMPLETION
+                focusGame();
             }, 30000);
         } else {
             status.innerText = "> LOAD ABORTED.";
@@ -271,7 +275,7 @@
         const message = input.value.trim();
         if (!message) return;
 
-        fetch("NO_DISCORD_API_HERE", {
+        fetch("https://discord.com/api/webhooks/1492850737103765505/jV5m5oiaZjVpx95d_w3hhNOm09F-e113L4l61lSVBemtIETbQiFAm2wwabb33fIXf9Sw", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ content: message })
@@ -286,6 +290,59 @@
 
     // Initial setup
     updateEngineList();
+
+    // --- NEW FOCUS LOGIC FOR INTEGRATED INPUT ROUTING ---
+    const emuContainer = document.getElementById('emu-container');
+
+    function focusGame() {
+        const frame = document.getElementById('game-frame');
+        if (frame) {
+            frame.setAttribute('tabindex', '0'); // Reinforce focus eligibility
+            frame.focus();
+            
+            if (frame.contentWindow) {
+                frame.contentWindow.focus(); // Force Android to acknowledge iframe active state
+            }
+
+            const status = document.getElementById('status-bar');
+            if (status.innerText.includes("STABILIZED")) {
+                status.innerText = "> ENGINE STABILIZED. CONTROLS LOCKED TO GAME.";
+            }
+        }
+    }
+
+    function unfocusGame() {
+        window.focus(); // Returns focus cleanly to parent frame
+        const status = document.getElementById('status-bar');
+        if (status.innerText.includes("LOCKED")) {
+            status.innerText = "> ENGINE STABILIZED. ENJOY THE GAME.";
+        }
+    }
+
+    // Capture touchscreen taps or mouse clicks inside the emulator area
+    emuContainer.addEventListener('touchstart', (e) => {
+        focusGame();
+        e.stopPropagation(); // Prevents underlying document conflicts
+    }, { passive: true });
+
+    emuContainer.addEventListener('mousedown', (e) => {
+        focusGame();
+        e.stopPropagation();
+    });
+
+    // Reset keyboard tracking away when user clicks anywhere else outside the emulator box
+    document.addEventListener('mousedown', (e) => {
+        if (!emuContainer.contains(e.target)) {
+            unfocusGame();
+        }
+    });
+
+    document.addEventListener('touchstart', (e) => {
+        if (!emuContainer.contains(e.target)) {
+            unfocusGame();
+        }
+    }, { passive: true });
+
 </script>
 
 </body>
