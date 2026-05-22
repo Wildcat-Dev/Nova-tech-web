@@ -170,34 +170,46 @@
         .modal-box h3 { margin-top: 0; color: var(--accent); letter-spacing: 2px; }
         .modal-box p { font-size: 13px; color: #ccc; line-height: 1.6; margin: 15px 0; }
         
-        /* Touch Controller Overlay Layout */
+        /* Fixed overlay constraints updated for absolute nested execution contexts */
         #touch-controller {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none; z-index: 1500; display: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 100; display: none;
         }
         .touch-btn {
             position: absolute; width: 60px; height: 60px;
-            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.2);
-            color: rgba(255,255,255,0.6); font-family: monospace; font-size: 20px;
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.8); font-family: monospace; font-size: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             border-radius: 50%; pointer-events: auto; user-select: none; -webkit-user-select: none;
-            cursor: pointer; font-weight: bold;
+            cursor: pointer; font-weight: bold; box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
-        .touch-btn span { font-size: 9px; text-transform: uppercase; margin-top: -2px; color: #888; }
+        .touch-btn span { font-size: 9px; text-transform: uppercase; margin-top: -2px; color: #bbb; }
         
-        /* D-PAD Left Side Layout (Plus Configuration) */
-        #v-up    { bottom: 150px; left: 80px; }
-        #v-down  { bottom: 30px;  left: 80px; }
-        #v-left  { bottom: 90px;  left: 20px; }
-        #v-right { bottom: 90px;  left: 140px; }
+        /* Adjusted layout percentages so it positions cleanly regardless of screen resolution scaling */
+        #v-up    { bottom: 130px; left: 75px; }
+        #v-down  { bottom: 20px;  left: 75px; }
+        #v-left  { bottom: 75px;  left: 20px; }
+        #v-right { bottom: 75px;  left: 130px; }
         
-        /* Action Buttons Right Side Layout */
-        #v-z { bottom: 40px; right: 40px; width: 75px; height: 75px; font-size: 24px; } /* Big Z */
-        #v-x { bottom: 130px; right: 50px; } /* X above Z */
+        #v-z { bottom: 30px; right: 30px; width: 75px; height: 75px; font-size: 24px; }
+        #v-x { bottom: 115px; right: 37px; }
         
-        /* Menu Buttons Center and Top Elements */
-        #v-enter { bottom: 40px; left: 50%; transform: translateX(-50%); border-radius: 8px; width: 80px; height: 45px; font-size: 14px; }
+        #v-enter { bottom: 30px; left: 50%; transform: translateX(-50%); border-radius: 8px; width: 80px; height: 45px; font-size: 14px; }
         #v-fs    { top: 20px; right: 20px; border-radius: 8px; width: 50px; height: 50px; font-size: 14px; }
+
+        /* Dynamic layout alignment adaptations applied native when container changes rules */
+        #emu-container:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            border-radius: 0 !important;
+        }
+        #emu-container:fullscreen #iframe-target {
+            height: 100% !important;
+        }
+        #emu-container:fullscreen #status-bar {
+            display: none !important; /* Hide structural status block during active full render updates */
+        }
     </style>
 </head>
 <body>
@@ -231,10 +243,26 @@
             <button class="action-btn" onclick="toggleFullscreen()" style="background: #222; border-color: #444;">FULLSCREEN</button>
         </div>
 
+        <!-- THE HOUSING CONTAINER: FULLSCREEN TARGET -->
         <div id="emu-container">
-            <div id="iframe-target" style="width:100%; height:calc(100% - 27px);">
+            <div id="iframe-target" style="width:100%; height:calc(100% - 27px); position: relative;">
                 <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#151515; font-weight:bold;">SONIC ENGINE STANDBY</div>
             </div>
+            
+            <!-- NESTED INTERACTION INPUT OVERLAY (Stays visible during Fullscreen) -->
+            <div id="touch-controller">
+                <div class="touch-btn" id="v-up"    data-key="ArrowUp">o<span>Up</span></div>
+                <div class="touch-btn" id="v-down"  data-key="ArrowDown">o<span>Down</span></div>
+                <div class="touch-btn" id="v-left"  data-key="ArrowLeft">o<span>Left</span></div>
+                <div class="touch-btn" id="v-right" data-key="ArrowRight">o<span>Right</span></div>
+                
+                <div class="touch-btn" id="v-z"     data-key="z">o<span>Z</span></div>
+                <div class="touch-btn" id="v-x"     data-key="x">o<span>X</span></div>
+                
+                <div class="touch-btn" id="v-enter" data-key="Enter">o<span>Enter</span></div>
+                <div class="touch-btn" id="v-fs"    onclick="toggleFullscreen()">o<span>FS</span></div>
+            </div>
+
             <div id="status-bar">>Engine Ready. Select Game To Play.</div>
         </div>
     </div>
@@ -249,24 +277,7 @@
 
 </div>
 
-<!-- --- VIRTUAL INTERACTION INPUT OVERLAY --- -->
-<div id="touch-controller">
-    <!-- D-PAD Layout -->
-    <div class="touch-btn" id="v-up"    data-key="ArrowUp">o<span>Up</span></div>
-    <div class="touch-btn" id="v-down"  data-key="ArrowDown">o<span>Down</span></div>
-    <div class="touch-btn" id="v-left"  data-key="ArrowLeft">o<span>Left</span></div>
-    <div class="touch-btn" id="v-right" data-key="ArrowRight">o<span>Right</span></div>
-    
-    <!-- Action Cluster -->
-    <div class="touch-btn" id="v-z"     data-key="z">o<span>Z</span></div>
-    <div class="touch-btn" id="v-x"     data-key="x">o<span>X</span></div>
-    
-    <!-- Menu Utilities -->
-    <div class="touch-btn" id="v-enter" data-key="Enter">o<span>Enter</span></div>
-    <div class="touch-btn" id="v-fs"    onclick="toggleFullscreen()">o<span>FS</span></div>
-</div>
-
-<!-- --- DYNAMIC SYSTEM MODALS --- -->
+<!-- SYSTEM MODALS -->
 <div id="systemModal" class="modal-overlay">
     <div class="modal-box">
         <h3 id="modalTitle">SYSTEM NOTICE</h3>
@@ -363,7 +374,6 @@
         const message = input.value.trim();
         if (!message) return;
 
-        // DISCORD WEBHOOK PIPELINE INTEGRATION
         fetch("https://discord.com/api/webhooks/1492850737103765505/jV5m5oiaZjVpx95d_w3hhNOm09F-e113L4l61lSVBemtIETbQiFAm2wwabb33fIXf9Sw", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -377,7 +387,6 @@
         });
     }
 
-    /* --- MODAL & SETTINGS CORE SYSTEM ENGINE --- */
     function showModal(title, bodyText) {
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('modalBody').innerText = bodyText;
@@ -401,7 +410,6 @@
         focusGame();
     }
 
-    /* --- FULLSCREEN TOGGLE CONTEXT MANAGER --- */
     function toggleFullscreen() {
         const container = document.getElementById('emu-container');
         if (!document.fullscreenElement) {
@@ -420,7 +428,6 @@
         }
     });
 
-    /* --- DESKTOP AND MOBILE RE-FOCUS HANDLERS --- */
     const emuContainer = document.getElementById('emu-container');
 
     function focusGame() {
