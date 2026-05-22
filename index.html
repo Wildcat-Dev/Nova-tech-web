@@ -155,6 +155,49 @@
             transition: color 0.5s; 
             box-sizing: border-box;
         }
+
+        /* --- MODAL, SETTINGS & OVERLAY STYLING --- */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100vw; height:100vh;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
+        .modal-box {
+            background: #111; border: 1px solid var(--border-glow);
+            padding: 25px; border-radius: 15px; max-width: 450px; width: 85%;
+            text-align: center; box-shadow: 0 0 30px rgba(0,162,255,0.2);
+        }
+        .modal-box h3 { margin-top: 0; color: var(--accent); letter-spacing: 2px; }
+        .modal-box p { font-size: 13px; color: #ccc; line-height: 1.6; margin: 15px 0; }
+        
+        /* Touch Controller Overlay Layout */
+        #touch-controller {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 1500; display: none;
+        }
+        .touch-btn {
+            position: absolute; width: 60px; height: 60px;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.6); font-family: monospace; font-size: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 50%; pointer-events: auto; user-select: none; -webkit-user-select: none;
+            cursor: pointer; font-weight: bold;
+        }
+        .touch-btn span { font-size: 9px; text-transform: uppercase; margin-top: -2px; color: #888; }
+        
+        /* D-PAD Left Side Layout (Plus Configuration) */
+        #v-up    { bottom: 150px; left: 80px; }
+        #v-down  { bottom: 30px;  left: 80px; }
+        #v-left  { bottom: 90px;  left: 20px; }
+        #v-right { bottom: 90px;  left: 140px; }
+        
+        /* Action Buttons Right Side Layout */
+        #v-z { bottom: 40px; right: 40px; width: 75px; height: 75px; font-size: 24px; } /* Big Z */
+        #v-x { bottom: 130px; right: 50px; } /* X above Z */
+        
+        /* Menu Buttons Center and Top Elements */
+        #v-enter { bottom: 40px; left: 50%; transform: translateX(-50%); border-radius: 8px; width: 80px; height: 45px; font-size: 14px; }
+        #v-fs    { top: 20px; right: 20px; border-radius: 8px; width: 50px; height: 50px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -171,7 +214,7 @@
 <div id="viewport">
     
     <div id="main-screen" class="screen">
-        </div>
+    </div>
 
     <div id="games-screen" class="screen"> 
         <div class="controls-bar">
@@ -184,6 +227,8 @@
             <select id="gameSelect"></select>
             
             <button class="action-btn" onclick="bootEngine()" style="background: var(--accent);">INITIALIZE</button>
+            <button class="action-btn" onclick="openSettings()" style="background: #222; border-color: #444;">SETTINGS</button>
+            <button class="action-btn" onclick="toggleFullscreen()" style="background: #222; border-color: #444;">FULLSCREEN</button>
         </div>
 
         <div id="emu-container">
@@ -204,6 +249,44 @@
 
 </div>
 
+<!-- --- VIRTUAL INTERACTION INPUT OVERLAY --- -->
+<div id="touch-controller">
+    <!-- D-PAD Layout -->
+    <div class="touch-btn" id="v-up"    data-key="ArrowUp">o<span>Up</span></div>
+    <div class="touch-btn" id="v-down"  data-key="ArrowDown">o<span>Down</span></div>
+    <div class="touch-btn" id="v-left"  data-key="ArrowLeft">o<span>Left</span></div>
+    <div class="touch-btn" id="v-right" data-key="ArrowRight">o<span>Right</span></div>
+    
+    <!-- Action Cluster -->
+    <div class="touch-btn" id="v-z"     data-key="z">o<span>Z</span></div>
+    <div class="touch-btn" id="v-x"     data-key="x">o<span>X</span></div>
+    
+    <!-- Menu Utilities -->
+    <div class="touch-btn" id="v-enter" data-key="Enter">o<span>Enter</span></div>
+    <div class="touch-btn" id="v-fs"    onclick="toggleFullscreen()">o<span>FS</span></div>
+</div>
+
+<!-- --- DYNAMIC SYSTEM MODALS --- -->
+<div id="systemModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 id="modalTitle">SYSTEM NOTICE</h3>
+        <p id="modalBody"></p>
+        <button class="action-btn" onclick="closeModal()" style="background: var(--accent); width: 100px;">OK</button>
+    </div>
+</div>
+
+<div id="settingsModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>ENGINE CONFIG</h3>
+        <p style="text-align: left; margin-bottom: 20px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="touchControlsCheck" style="transform: scale(1.3);"> Enable Virtual Touch Controls
+            </label>
+        </p>
+        <button class="action-btn" onclick="saveSettings()" style="background: var(--accent); width: 100px;">SAVE</button>
+    </div>
+</div>
+
 <script>
     const engineConfig = {
         rsdkv5: [{ name: "Sonic Mania", file: "Mania/index.html" }],
@@ -213,6 +296,8 @@
             { name: "Sonic 2", file: "sonic2.zip" }
         ]
     };
+
+    let touchControlsEnabled = false;
 
     function updateEngineList() {
         const type = document.getElementById('engineType').value;
@@ -239,14 +324,17 @@
             status.innerText = "> BOOTING MODULE... STANDBY FOR 30s.";
             status.style.color = "var(--warning)";
             
-            // ADDED ID AND TABINDEX="0" TO FORCE ANDROID INPUT SUPPORT
             target.innerHTML = `<iframe id="game-frame" src="${file}" tabindex="0"></iframe>`;
             
             setTimeout(() => {
-                status.innerText = "> ENGINE STABILIZED. ENJOY THE GAME.";
+                status.innerText = "> ENGINE STABILIZED. CONTROLS LOCKED TO GAME.";
                 status.style.color = "#0f0";
-                // TRIGGER AUTOMATIC FOCUS UPON COMPLETION
                 focusGame();
+                
+                showModal(
+                    "INITIALIZATION HINT", 
+                    "Hint: You can enable touch controls in settings, and press F11 on Windows or use the Fullscreen button and touch to enter full display."
+                );
             }, 30000);
         } else {
             status.innerText = "> LOAD ABORTED.";
@@ -275,6 +363,7 @@
         const message = input.value.trim();
         if (!message) return;
 
+        // DISCORD WEBHOOK PIPELINE INTEGRATION
         fetch("https://discord.com/api/webhooks/1492850737103765505/jV5m5oiaZjVpx95d_w3hhNOm09F-e113L4l61lSVBemtIETbQiFAm2wwabb33fIXf9Sw", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -288,61 +377,122 @@
         });
     }
 
-    // Initial setup
-    updateEngineList();
+    /* --- MODAL & SETTINGS CORE SYSTEM ENGINE --- */
+    function showModal(title, bodyText) {
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalBody').innerText = bodyText;
+        document.getElementById('systemModal').style.display = 'flex';
+    }
 
-    // --- NEW FOCUS LOGIC FOR INTEGRATED INPUT ROUTING ---
+    function closeModal() {
+        document.getElementById('systemModal').style.display = 'none';
+        focusGame();
+    }
+
+    function openSettings() {
+        document.getElementById('touchControlsCheck').checked = touchControlsEnabled;
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function saveSettings() {
+        touchControlsEnabled = document.getElementById('touchControlsCheck').checked;
+        document.getElementById('settingsModal').style.display = 'none';
+        document.getElementById('touch-controller').style.display = touchControlsEnabled ? 'block' : 'none';
+        focusGame();
+    }
+
+    /* --- FULLSCREEN TOGGLE CONTEXT MANAGER --- */
+    function toggleFullscreen() {
+        const container = document.getElementById('emu-container');
+        if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => {
+                alert(`Error attempts entering fullscreen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'F11') {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+    });
+
+    /* --- DESKTOP AND MOBILE RE-FOCUS HANDLERS --- */
     const emuContainer = document.getElementById('emu-container');
 
     function focusGame() {
         const frame = document.getElementById('game-frame');
         if (frame) {
-            frame.setAttribute('tabindex', '0'); // Reinforce focus eligibility
+            frame.setAttribute('tabindex', '0');
             frame.focus();
-            
             if (frame.contentWindow) {
-                frame.contentWindow.focus(); // Force Android to acknowledge iframe active state
-            }
-
-            const status = document.getElementById('status-bar');
-            if (status.innerText.includes("STABILIZED")) {
-                status.innerText = "> ENGINE STABILIZED. CONTROLS LOCKED TO GAME.";
+                frame.contentWindow.focus();
             }
         }
     }
 
     function unfocusGame() {
-        window.focus(); // Returns focus cleanly to parent frame
-        const status = document.getElementById('status-bar');
-        if (status.innerText.includes("LOCKED")) {
-            status.innerText = "> ENGINE STABILIZED. ENJOY THE GAME.";
-        }
+        window.focus();
     }
 
-    // Capture touchscreen taps or mouse clicks inside the emulator area
-    emuContainer.addEventListener('touchstart', (e) => {
-        focusGame();
-        e.stopPropagation(); // Prevents underlying document conflicts
-    }, { passive: true });
+    emuContainer.addEventListener('touchstart', (e) => { focusGame(); e.stopPropagation(); }, { passive: true });
+    emuContainer.addEventListener('mousedown', (e) => { focusGame(); e.stopPropagation(); });
 
-    emuContainer.addEventListener('mousedown', (e) => {
-        focusGame();
-        e.stopPropagation();
-    });
-
-    // Reset keyboard tracking away when user clicks anywhere else outside the emulator box
     document.addEventListener('mousedown', (e) => {
-        if (!emuContainer.contains(e.target)) {
+        if (!emuContainer.contains(e.target) && !e.target.closest('.touch-btn') && !e.target.closest('.modal-box')) {
             unfocusGame();
         }
     });
-
     document.addEventListener('touchstart', (e) => {
-        if (!emuContainer.contains(e.target)) {
+        if (!emuContainer.contains(e.target) && !e.target.closest('.touch-btn') && !e.target.closest('.modal-box')) {
             unfocusGame();
         }
     }, { passive: true });
 
+    /* --- TOUCH CONTROLS EVENT ROUTING INJECTOR --- */
+    document.querySelectorAll('.touch-btn').forEach(btn => {
+        const keyCode = btn.getAttribute('data-key');
+        if (!keyCode) return;
+
+        function handlePress(e) {
+            e.preventDefault();
+            focusGame();
+            
+            if(btn.childNodes.length > 0) btn.childNodes[0].nodeValue = "O";
+            
+            const frame = document.getElementById('game-frame');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: keyCode, code: keyCode, bubbles: true, cancelable: true, view: frame.contentWindow
+                }));
+            }
+        }
+
+        function handleRelease(e) {
+            e.preventDefault();
+            
+            if(btn.childNodes.length > 0) btn.childNodes[0].nodeValue = "o";
+
+            const frame = document.getElementById('game-frame');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.dispatchEvent(new KeyboardEvent('keyup', {
+                    key: keyCode, code: keyCode, bubbles: true, cancelable: true, view: frame.contentWindow
+                }));
+            }
+        }
+
+        btn.addEventListener('touchstart', handlePress, { passive: false });
+        btn.addEventListener('touchend', handleRelease, { passive: false });
+        btn.addEventListener('mousedown', handlePress);
+        btn.addEventListener('mouseup', handleRelease);
+        btn.addEventListener('mouseleave', handleRelease);
+    });
+
+    // Initial setup
+    updateEngineList();
 </script>
 
 </body>
