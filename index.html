@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nova Tech | V13</title>
+    <title>Nova Tech | V14</title>
     <link rel="icon" type="image/png" href="icon.png">
     
     <script src="coi-serviceworker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <style>
         :root { 
@@ -15,6 +16,11 @@
             --accent: #00a2ff;
             --warning: #ffae00;
             --success: #00ff66;
+        }
+        
+        @font-face {
+            font-family: 'Anurati';
+            src: url('fonts/anurati.otf') format('opentype');
         }
         
         body, html { 
@@ -26,10 +32,10 @@
             color: white; 
         }
 
-        /* Viewport Logic */
+        /* Viewport Logic - 4 Screens */
         #viewport { 
             display: flex; 
-            width: 300vw; 
+            width: 400vw; 
             height: 100vh; 
             transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); 
         }
@@ -49,6 +55,7 @@
         #main-screen { background-image: url('phone.png'); }
         #games-screen { background-color: #050505; background-image: url('games.png'); }
         #comms-screen { background-image: url('comms.png'); }
+        #levian-screen { background-color: #000000; }
 
         @media (max-width: 1024px) {
             #main-screen { background-image: url('phoneandroid.png') !important; }
@@ -80,27 +87,141 @@
             align-items: flex-start; 
         }
 
-        .nav-buttons { display: flex; gap: 8px; }
-        
-        button { 
-            background: #111; 
-            border: 1px solid #333; 
-            color: #888; 
-            padding: 8px 15px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            font-size: 11px; 
-            transition: 0.3s; 
+        /* Sci-Fi Dropdown UI */
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 4px;
         }
 
-        button.active { 
-            background: var(--accent); 
-            color: #fff; 
-            border-color: var(--accent); 
-            box-shadow: 0 0 15px rgba(0,162,255,0.4); 
+        .dropdown-trigger {
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0,162,255,0.1);
         }
 
+        .dropdown-trigger:hover, .dropdown-container.open .dropdown-trigger {
+            background: #151515;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(0,162,255,0.4);
+        }
+
+        .dropdown-arrow {
+            width: 10px;
+            height: 10px;
+            fill: #888;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dropdown-container.open .dropdown-arrow {
+            transform: rotate(180deg);
+            fill: var(--accent);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            width: 140px;
+            overflow: hidden;
+            z-index: 1001;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            flex-direction: column;
+        }
+
+        .dropdown-container.open .dropdown-menu {
+            display: flex;
+        }
+
+        .dropdown-item {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 10px 15px;
+            text-align: center;
+            width: 100%;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent);
+        }
+
+        .dropdown-item.active-page {
+            color: #fff;
+            background: rgba(0, 162, 255, 0.15);
+            border-left: 2px solid var(--accent);
+            border-right: 2px solid var(--accent);
+        }
+
+        /* Levian AI Screen Elements */
+        .levian-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50px);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .levian-logo {
+            width: 400px;
+            height: 400px;
+            object-fit: contain;
+            margin-bottom: -10px;
+            filter: drop-shadow(0 0 25px rgba(0, 162, 255, 0.15));
+        }
+
+        .levian-text {
+            font-family: 'Anurati', sans-serif;
+            font-size: 13px;
+            color: #cccccc;
+            letter-spacing: 3px;
+            line-height: 2;
+            max-width: 650px;
+        }
+
+        .levian-text a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 1px dashed rgba(0, 162, 255, 0.4);
+            padding-bottom: 2px;
+        }
+
+        .levian-text a:hover {
+            color: #fff;
+            text-shadow: 0 0 10px var(--accent);
+            border-bottom-color: #fff;
+        }
+
+        /* Core Canvas controls rules */
         .controls-bar {
             margin-bottom: 15px; 
             display: flex; 
@@ -232,11 +353,21 @@
 <body>
 
 <nav id="mainNav">
-    <h1 style="margin:0 0 5px 0; font-size:0.5rem; letter-spacing:5px; color: var(--accent);">NOVA TECH | V13</h1>
-    <div class="nav-buttons">
-        <button onclick="slideTo('main', 0)" id="btn-0" class="active">HOME</button>
-        <button onclick="slideTo('games', 1)" id="btn-1">SONIC</button>
-        <button onclick="slideTo('comms', 2)" id="btn-2">COMMS</button>
+    <h1 style="margin:0 0 5px 0; font-size:0.5rem; letter-spacing:5px; color: var(--accent);">NOVA TECH | V14</h1>
+    
+    <div class="dropdown-container" id="navDropdown">
+        <button class="dropdown-trigger" onclick="toggleDropdown(event)">
+            <span id="activePageLabel">HOME</span>
+            <svg class="dropdown-arrow" viewBox="0 0 24 24">
+                <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+            </svg>
+        </button>
+        <div class="dropdown-menu">
+            <button onclick="selectPage('HOME', 0)" class="dropdown-item active-page">HOME</button>
+            <button onclick="selectPage('SONIC', 1)" class="dropdown-item">SONIC</button>
+            <button onclick="selectPage('COMMS', 2)" class="dropdown-item">COMMS</button>
+            <button onclick="selectPage('LEVIAN AI', 3)" class="dropdown-item">LEVIAN AI</button>
+        </div>
     </div>
 </nav>
 
@@ -289,9 +420,18 @@
         </div>
     </div>
 
+    <div id="levian-screen" class="screen">
+        <div class="levian-container">
+            <img src="levianicon.png" alt="Levian AI" class="levian-logo">
+            <p class="levian-text">
+                Levian AI is in progress and will be soon available at <br>
+                <a href="https://novatech.qzz.io/LevianAI" target="_blank">https://novatech.qzz.io/LevianAI</a>
+            </p>
+        </div>
+    </div>
+
 </div>
 
-<!-- SYSTEM MODALS -->
 <div id="systemModal" class="modal-overlay">
     <div class="modal-box">
         <h3 id="modalTitle">SYSTEM NOTICE</h3>
@@ -309,7 +449,6 @@
             </label>
         </p>
         
-        <!-- MODULE 1: GAME CONTROLS SAVE STATES -->
         <div class="management-section">
             <div class="management-title">Game Save Profiles</div>
             <div class="save-management-panel">
@@ -319,7 +458,6 @@
             </div>
         </div>
 
-        <!-- MODULE 2: OFFLINE GAME PACK SYSTEM EXPORTER -->
         <div class="management-section">
             <div class="management-title">Offline Engine Packages</div>
             <div class="save-management-panel">
@@ -351,6 +489,31 @@
             navigator.serviceWorker.register('coi-serviceworker.js');
         });
     }
+
+    /* DROPDOWN FRAMEWORK ENGINE INTERFACES */
+    function toggleDropdown(event) {
+        event.stopPropagation();
+        document.getElementById('navDropdown').classList.toggle('open');
+    }
+
+    function selectPage(pageName, index) {
+        document.getElementById('activePageLabel').innerText = pageName;
+        
+        slideTo(pageName.toLowerCase().replace(' ', '-'), index);
+        
+        const dropdownItems = document.querySelectorAll('.dropdown-item');
+        dropdownItems.forEach((btn, i) => {
+            if (i === index) btn.classList.add('active-page');
+            else btn.classList.remove('active-page');
+        });
+        
+        document.getElementById('navDropdown').classList.remove('open');
+    }
+
+    document.addEventListener('click', () => {
+        const dropdown = document.getElementById('navDropdown');
+        if (dropdown) dropdown.classList.remove('open');
+    });
 
     function updateEngineList() {
         const type = document.getElementById('engineType').value;
@@ -395,7 +558,7 @@
                 focusGame();
             }, 500);
         } else {
-            const confirmBoot = confirm("FIRST TIME INITIALIZATION: This game is not stored in your browser cache yet. It will download ~400MB of data over Wi-Fi. Once downloaded, you can back it up to your device storage.");
+            const confirmBoot = confirm("FIRST TIME INITIALIZATION: This game is not stored in your browser cache yet. It will download engine parts over Wi-Fi. Once downloaded, you can back it up to your device storage.");
             if (confirmBoot) {
                 status.innerText = "> DOWNLOADING ASSETS INTO STORAGE GRID... PLEASE WAIT.";
                 status.style.color = "var(--warning)";
@@ -417,12 +580,9 @@
         const vp = document.getElementById('viewport');
         const nav = document.getElementById('mainNav');
         vp.style.transform = `translateX(-${index * 100}vw)`;
+        
         if (index > 0) nav.classList.add('nav-side-mode');
         else nav.classList.remove('nav-side-mode');
-
-        document.querySelectorAll('.nav-buttons button').forEach((btn, i) => {
-            btn.className = (i === index) ? 'active' : '';
-        });
     }
 
     function sendMessage() {
@@ -463,7 +623,6 @@
         focusGame();
     }
 
-    /* --- SAVE STATE EXPORTER --- */
     function exportGameState() {
         try {
             const backupObject = {};
@@ -510,13 +669,11 @@
         reader.readAsText(sourceFile);
     }
 
-    /* --- HARDWARE GAME PACK EXPORTER & RESTORE ENGINE --- */
     async function exportCachedEngine() {
         if (!('caches' in window)) return alert("Storage engine not supported on this browser device.");
         
         const targetFile = document.getElementById('gameSelect').value;
         const status = document.getElementById('status-bar');
-        
         status.innerText = "> PACKAGING ENGINE BINARIES...";
         
         try {
@@ -537,8 +694,6 @@
             }
             
             const blobData = await matchedResponse.blob();
-            
-            // Convert binary stream safely into a transferrable text bundle base format
             const reader = new FileReader();
             reader.onloadend = function() {
                 const bundle = {
@@ -579,11 +734,10 @@
                 const bundle = JSON.parse(event.target.result);
                 if (!bundle.binaryData || !bundle.filename) throw new Error("Invalid asset bundle signature.");
                 
-                // Decode base64 stream strings back into raw system files
                 const response = await fetch(bundle.binaryData);
                 const blob = await response.blob();
                 
-                const cache = await caches.open('v13-core-engine-cache');
+                const cache = await caches.open('v14-core-engine-cache');
                 await cache.put(
                     new Request(bundle.filename),
                     new Response(blob, { headers: { 'Content-Type': bundle.filename.endsWith('.zip') ? 'application/zip' : 'text/html' } })
@@ -624,8 +778,6 @@
             if (frame.contentWindow) frame.contentWindow.focus();
         }
     }
-
-    function unfocusGame() { window.focus(); }
 
     emuContainer.addEventListener('touchstart', (e) => { focusGame(); e.stopPropagation(); }, { passive: true });
     emuContainer.addEventListener('mousedown', (e) => { focusGame(); e.stopPropagation(); });
