@@ -2,199 +2,848 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nova Tech | V14</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    
+    <script src="coi-serviceworker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
     <style>
-        :root {
-            --bg-color: #0b0c10;
-            --primary: #66fcf1;
-            --accent: #45f3ff;
-            --text: #ffffff;
-            --surface: #1f2833;
+        :root { 
+            --liquid-glass: rgba(255, 255, 255, 0.08); 
+            --border-glow: rgba(255, 255, 255, 0.15); 
+            --accent: #00a2ff;
+            --warning: #ffae00;
+            --success: #00ff66;
+        }
+        
+        @font-face {
+            font-family: 'Anurati';
+            src: url('fonts/anurati.otf') format('opentype');
+        }
+        
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: #000; 
+            font-family: 'Segoe UI', sans-serif; 
+            color: white; 
         }
 
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
+        /* Viewport Logic - 4 Screens */
+        #viewport { 
+            display: flex; 
+            width: 400vw; 
+            height: 100vh; 
+            transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); 
+        }
+
+        .screen { 
+            width: 100vw; 
+            height: 100vh; 
+            background-size: cover; 
+            background-position: center; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative; 
+        }
+
+        #main-screen { background-image: url('phone.png'); }
+        #games-screen { background-color: #050505; background-image: url('games.png'); }
+        #comms-screen { background-image: url('comms.png'); }
+        #levian-screen { background-color: #000000; }
+
+        /* Navigation HUD */
+        nav {
+            position: fixed; 
+            top: 20px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 12px 25px;
+            border-radius: 15px; 
+            background: rgba(0, 0, 0, 0.7); 
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-glow); 
+            z-index: 1000; 
+            transition: all 0.6s ease-in-out;
+        }
+
+        .nav-side-mode { 
+            left: 30px; 
+            transform: translateX(0); 
+            align-items: flex-start; 
+        }
+
+        /* Sci-Fi Dropdown UI */
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .dropdown-trigger {
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0,162,255,0.1);
+        }
+
+        .dropdown-trigger:hover, .dropdown-container.open .dropdown-trigger {
+            background: #151515;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(0,162,255,0.4);
+        }
+
+        .dropdown-arrow {
+            width: 10px;
+            height: 10px;
+            fill: #888;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dropdown-container.open .dropdown-arrow {
+            transform: rotate(180deg);
+            fill: var(--accent);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            width: 140px;
+            overflow: hidden;
+            z-index: 1001;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            flex-direction: column;
+        }
+
+        .dropdown-container.open .dropdown-menu {
+            display: flex;
+        }
+
+        .dropdown-item {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 10px 15px;
+            text-align: center;
+            width: 100%;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent);
+        }
+
+        .dropdown-item.active-page {
+            color: #fff;
+            background: rgba(0, 162, 255, 0.15);
+            border-left: 2px solid var(--accent);
+            border-right: 2px solid var(--accent);
+        }
+
+        /* Levian AI Screen Elements */
+        .levian-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .container {
+            transform: translateY(-20px); 
             text-align: center;
-            background: var(--surface);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 255, 242, 0.1);
-            border: 1px solid rgba(102, 252, 241, 0.2);
-            width: 90%;
-            max-width: 600px;
-        }
-
-        h1 { color: var(--primary); margin-bottom: 25px; }
-
-        select, button {
+            padding: 20px;
             width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 6px;
-            border: 1px solid var(--primary);
-            background: var(--bg-color);
-            color: var(--text);
-            font-size: 16px;
-            outline: none;
             box-sizing: border-box;
-            cursor: pointer;
         }
 
-        button {
-            background: var(--primary);
-            color: var(--bg-color);
-            font-weight: bold;
+        .levian-logo {
+            width: 256px; 
+            height: 256px; 
+            object-fit: contain;
+            margin-bottom: 25px; 
+        }
+
+        .levian-text {
+            font-family: 'Anurati', sans-serif;
+            font-size: 18px; /* Slightly Bigger Typography Base */
+            color: #cccccc;
+            letter-spacing: 3px;
+            line-height: 2;
+            max-width: 700px;
+            text-transform: uppercase; /* Ensures strict fallback capitalization */
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .levian-text a {
+            color: var(--accent);
+            text-decoration: none;
             transition: all 0.3s ease;
+            border-bottom: 1px dashed rgba(0, 162, 255, 0.4);
+            padding-bottom: 2px;
+            display: inline-block;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            text-transform: uppercase;
         }
 
-        button:hover {
-            background: var(--accent);
-            box-shadow: 0 0 15px var(--accent);
+        .levian-text a:hover {
+            color: #fff;
+            text-shadow: 0 0 10px var(--accent);
+            border-bottom-color: #fff;
         }
 
-        #canvas-container {
-            width: 100%;
-            margin-top: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #000;
-        }
-
-        iframe {
-            width: 100%;
-            height: 500px;
-            border: none;
-            display: none;
-        }
-
-        /* CUSTOM IN-UI MODAL POPUP */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
+        /* Core Canvas controls rules */
+        .controls-bar {
+            margin-bottom: 15px; 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+            flex-wrap: wrap; 
             justify-content: center;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 9999;
+            padding: 15px; 
+            border-radius: 12px; 
+            background: var(--liquid-glass); 
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow); 
+            z-index: 10;
         }
 
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        select, .action-btn { 
+            background: rgba(0,0,0,0.8); 
+            color: white; 
+            border: 1px solid #444; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 12px; 
+        }
 
+        .action-btn:hover { background: #fff; color: #000; }
+
+        #emu-container { 
+            width: 90%; 
+            max-width: 900px; 
+            height: 500px; 
+            background: #000; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            border: 1px solid #333; 
+            position: relative;
+        }
+
+        iframe { width: 100%; height: 100%; border: none; }
+
+        #status-bar { 
+            width: 100%; 
+            background: #000; 
+            color: #0f0; 
+            font-family: monospace; 
+            font-size: 11px; 
+            padding: 8px 15px; 
+            border-top: 1px solid #222; 
+            transition: color 0.5s; 
+            box-sizing: border-box;
+        }
+
+        /* Modals & Overlays */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100vw; height:100vh;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
         .modal-box {
-            background: var(--surface);
-            border: 2px solid var(--primary);
-            padding: 25px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
-            width: 85%;
-            box-shadow: 0 0 25px rgba(102, 252, 241, 0.3);
+            background: #111; border: 1px solid var(--border-glow);
+            padding: 25px; border-radius: 15px; max-width: 450px; width: 85%;
+            text-align: center; box-shadow: 0 0 30px rgba(0,162,255,0.2);
+        }
+        .modal-box h3 { margin-top: 0; color: var(--accent); letter-spacing: 2px; }
+        .modal-box p { font-size: 13px; color: #ccc; line-height: 1.6; margin: 15px 0; }
+        
+        #touch-controller {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 100; display: none;
+        }
+        .touch-btn {
+            position: absolute; width: 60px; height: 60px;
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.8); font-family: monospace; font-size: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 50%; pointer-events: auto; user-select: none; -webkit-user-select: none;
+            cursor: pointer; font-weight: bold; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .touch-btn span { font-size: 9px; text-transform: uppercase; margin-top: -2px; color: #bbb; }
+        
+        #v-up    { bottom: 130px; left: 75px; }
+        #v-down  { bottom: 20px;  left: 75px; }
+        #v-left  { bottom: 75px;  left: 20px; }
+        #v-right { bottom: 75px;  left: 130px; }
+        
+        #v-z { bottom: 30px; right: 30px; width: 75px; height: 75px; font-size: 24px; }
+        #v-x { bottom: 115px; right: 37px; }
+        
+        #v-enter { bottom: 30px; left: 50%; transform: translateX(-50%); border-radius: 8px; width: 80px; height: 45px; font-size: 14px; }
+        #v-fs    { top: 20px; right: 20px; border-radius: 8px; width: 50px; height: 50px; font-size: 14px; }
+
+        #emu-container:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            border-radius: 0 !important;
+        }
+        #emu-container:fullscreen #iframe-target { height: 100% !important; }
+        #emu-container:fullscreen #status-bar { display: none !important; }
+
+        .management-section {
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid #222;
+        }
+        .management-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #666;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+        .save-management-panel {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .management-btn {
+            font-size: 10px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            flex-grow: 1;
         }
 
-        .modal-box h3 { color: var(--primary); margin-top: 0; }
-        .modal-box p { margin: 15px 0 20px 0; line-height: 1.5; color: #fff; }
-        
-        .modal-btn {
-            background: var(--primary);
-            color: var(--bg-color);
-            border: none; padding: 10px 25px;
-            border-radius: 5px; font-weight: bold; cursor: pointer;
-            margin-top: 10px; width: auto;
+        /* ANDROID PORTRAIT & RESPONSIVE VIEWPORT ENGINE */
+        @media (max-width: 1024px) {
+            #main-screen { background-image: url('phoneandroid.png') !important; }
+            #games-screen { background-image: url('gamesandroid.png') !important; }
+            #comms-screen { background-image: url('commsandroid.png') !important; }
+        }
+
+        @media (max-width: 480px), (orientation: portrait) {
+            .levian-logo {
+                width: 190px; 
+                height: 190px;
+                margin-bottom: 20px;
+            }
+            .levian-text {
+                font-size: 16px; /* Retains clear, bold presence on Android Portrait */
+                letter-spacing: 2px; /* Balances word-wrapping limits with tracking requirements */
+                line-height: 1.9;
+                max-width: 100%;
+                padding: 0 20px;
+            }
+            .levian-container {
+                transform: translateY(-5px);
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Nova Tech V14</h1>
-        
-        <select id="engine-select">
-            <option value="rsdkv5">Sonic Mania (RSDKv5)</option>
-            <option value="rsdkv3">Sonic CD (RSDKv3)</option>
-            <option value="retroarch">S1/S2(Emulatrix)</option>
-        </select>
+<nav id="mainNav">
+    <h1 style="margin:0 0 5px 0; font-size:0.5rem; letter-spacing:5px; color: var(--accent);">NOVA TECH | V14</h1>
+    
+    <div class="dropdown-container" id="navDropdown">
+        <button class="dropdown-trigger" onclick="toggleDropdown(event)">
+            <span id="activePageLabel">HOME</span>
+            <svg class="dropdown-arrow" viewBox="0 0 24 24">
+                <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+            </svg>
+        </button>
+        <div class="dropdown-menu">
+            <button onclick="selectPage('HOME', 0)" class="dropdown-item active-page">HOME</button>
+            <button onclick="selectPage('SONIC', 1)" class="dropdown-item">SONIC</button>
+            <button onclick="selectPage('COMMS', 2)" class="dropdown-item">COMMS</button>
+            <button onclick="selectPage('LEVIAN AI', 3)" class="dropdown-item">LEVIAN AI</button>
+        </div>
+    </div>
+</nav>
 
-        <select id="game-select"></select>
+<div id="viewport">
+    
+    <div id="main-screen" class="screen"></div>
 
-        <button id="init-btn">Initialize Engine</button>
+    <div id="games-screen" class="screen"> 
+        <div class="controls-bar">
+            <select id="engineType" onchange="updateEngineList()">
+                <option value="rsdkv5">RSDK v5 (Mania)</option>
+                <option value="rsdkv3">RSDK v3 (Sonic CD)</option>
+                <option value="retroarch">RetroArch (S1/S2)</option>
+            </select>
+            
+            <select id="gameSelect"></select>
+            
+            <button class="action-btn" onclick="bootEngine()" style="background: var(--accent);">INITIALIZE</button>
+            <button class="action-btn" onclick="openSettings()" style="background: #222; border-color: #444;">SETTINGS</button>
+            <button class="action-btn" onclick="toggleFullscreen()" style="background: #222; border-color: #444;">FULLSCREEN</button>
+        </div>
 
-        <div id="canvas-container">
-            <iframe id="game-frame" src="" tabindex="0"></iframe>
+        <div id="emu-container">
+            <div id="iframe-target" style="width:100%; height:calc(100% - 27px); position: relative;">
+                <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#151515; font-weight:bold;">SONIC ENGINE STANDBY</div>
+            </div>
+            
+            <div id="touch-controller">
+                <div class="touch-btn" id="v-up"    data-key="ArrowUp">o<span>Up</span></div>
+                <div class="touch-btn" id="v-down"  data-key="ArrowDown">o<span>Down</span></div>
+                <div class="touch-btn" id="v-left"  data-key="ArrowLeft">o<span>Left</span></div>
+                <div class="touch-btn" id="v-right" data-key="ArrowRight">o<span>Right</span></div>
+                
+                <div class="touch-btn" id="v-z"     data-key="z">o<span>Z</span></div>
+                <div class="touch-btn" id="v-x"     data-key="x">o<span>X</span></div>
+                
+                <div class="touch-btn" id="v-enter" data-key="Enter">o<span>Enter</span></div>
+                <div class="touch-btn" id="v-fs"    onclick="toggleFullscreen()">o<span>FS</span></div>
+            </div>
+
+            <div id="status-bar">>Engine Ready. Select Game To Play.</div>
         </div>
     </div>
 
-    <div id="custom-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h3>System Message</h3>
-            <p>Powering up core systems... This will take a bit to load.</p>
-            <button class="modal-btn" onclick="closeModal()">Acknowledge</button>
+    <div id="comms-screen" class="screen">
+        <h2 style="letter-spacing: 5px; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 20px;">Secure Comms Channel</h2>
+        <div class="controls-bar" style="width: 90%; max-width: 500px;">
+            <input type="text" id="msg" style="flex-grow:1; background:none; border:none; color:white; outline:none; font-family: monospace;" placeholder="Enter transmission...">
+            <button onclick="sendMessage()" class="action-btn">SEND</button>
         </div>
     </div>
 
-    <script>
-        // Mapped straight to your local directory setup
-        const engineConfig = {
-            rsdkv5: [{ name: "Sonic Mania", file: "Mania/index.html" }],
-            rsdkv3: [{ name: "Sonic CD", file: "CD/index.html" }],
-            retroarch: [
-                { name: "Sonic the Hedgehog 1", file: "emulatrix/index.html?rom=Sonic1.md" },
-                { name: "Sonic the Hedgehog 2", file: "emulatrix/index.html?rom=Sonic2.md" }
-            ]
-        };
+    <div id="levian-screen" class="screen">
+        <div class="levian-container">
+            <img src="levianicon.png" alt="Levian AI" class="levian-logo">
+            <p class="levian-text">
+                LEVIAN AI IS IN PROGRESS AND WILL BE SOON AVAILABLE AT <br>
+                <a href="https://novatech.qzz.io/LevianAI" target="_blank">HTTPS://NOVATECH.QZZ.IO/LEVIANAI</a>
+            </p>
+        </div>
+    </div>
 
-        const engineSelect = document.getElementById('engine-select');
-        const gameSelect = document.getElementById('game-select');
-        const initBtn = document.getElementById('init-btn');
-        const gameFrame = document.getElementById('game-frame');
-        const modal = document.getElementById('custom-modal');
+</div>
 
-        function updateGameList() {
-            gameSelect.innerHTML = '';
-            const selectedEngine = engineSelect.value;
-            engineConfig[selectedEngine].forEach(game => {
-                const opt = document.createElement('option');
-                opt.value = game.file;
-                opt.textContent = game.name;
-                gameSelect.appendChild(opt);
-            });
-        }
+<div id="systemModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 id="modalTitle">SYSTEM NOTICE</h3>
+        <p id="modalBody"></p>
+        <button class="action-btn" onclick="closeModal()" style="background: var(--accent); width: 100px;">OK</button>
+    </div>
+</div>
 
-        // Custom UI Alert Controls
-        function closeModal() {
-            modal.classList.remove('active');
-        }
-
-        engineSelect.addEventListener('change', updateGameList);
+<div id="settingsModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>ENGINE CONFIG</h3>
+        <p style="text-align: left; margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="touchControlsCheck" style="transform: scale(1.3);"> Enable Virtual Touch Controls
+            </label>
+        </p>
         
-        initBtn.addEventListener('click', () => {
-            const targetFile = gameSelect.value;
-            if (!targetFile) return;
+        <div class="management-section">
+            <div class="management-title">Game Save Profiles</div>
+            <div class="save-management-panel">
+                <button class="action-btn management-btn" onclick="exportGameState()" style="background: #1e40af; border-color: #2563eb;">Export Save</button>
+                <button class="action-btn management-btn" onclick="triggerStateImport()" style="background: #065f46; border-color: #059669;">Import Save</button>
+                <input type="file" id="importStateFile" accept=".json" style="display: none;" onchange="importGameState(this)">
+            </div>
+        </div>
 
-            // Triggering the custom UI notice instead of standard browser dialog.
-            modal.classList.add('active');
+        <div class="management-section">
+            <div class="management-title">Offline Engine Packages</div>
+            <div class="save-management-panel">
+                <button class="action-btn management-btn" onclick="exportCachedEngine()" style="background: #7c2d12; border-color: #c2410c;">Backup RSDK (.pak)</button>
+                <button class="action-btn management-btn" onclick="triggerEngineImport()" style="background: #4c1d95; border-color: #6d28d9;">Restore RSDK</button>
+                <input type="file" id="importEngineFile" accept=".json" style="display: none;" onchange="importCachedEngine(this)">
+            </div>
+        </div>
+        
+        <br>
+        <button class="action-btn" onclick="saveSettings()" style="background: var(--accent); width: 100px;">SAVE</button>
+    </div>
+</div>
 
-            gameFrame.src = targetFile;
-            gameFrame.style.display = "block";
-            gameFrame.focus();
+<script>
+    const engineConfig = {
+        rsdkv5: [{ name: "Sonic Mania", file: "Mania/index.html" }],
+        rsdkv3: [{ name: "Sonic CD", file: "CD/index.html" }],
+        retroarch: [
+            { name: "Sonic 1", file: "sonic1.zip" },
+            { name: "Sonic 2", file: "sonic2.zip" }
+        ]
+    };
+
+    let touchControlsEnabled = false;
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('coi-serviceworker.js');
         });
+    }
 
-        // Initialize default view
-        updateGameList();
-    </script>
+    /* DROPDOWN FRAMEWORK ENGINE INTERFACES */
+    function toggleDropdown(event) {
+        event.stopPropagation();
+        document.getElementById('navDropdown').classList.toggle('open');
+    }
+
+    function selectPage(pageName, index) {
+        document.getElementById('activePageLabel').innerText = pageName;
+        
+        slideTo(pageName.toLowerCase().replace(' ', '-'), index);
+        
+        const dropdownItems = document.querySelectorAll('.dropdown-item');
+        dropdownItems.forEach((btn, i) => {
+            if (i === index) btn.classList.add('active-page');
+            else btn.classList.remove('active-page');
+        });
+        
+        document.getElementById('navDropdown').classList.remove('open');
+    }
+
+    document.addEventListener('click', () => {
+        const dropdown = document.getElementById('navDropdown');
+        if (dropdown) dropdown.classList.remove('open');
+    });
+
+    function updateEngineList() {
+        const type = document.getElementById('engineType').value;
+        const selector = document.getElementById('gameSelect');
+        selector.innerHTML = '';
+        
+        engineConfig[type].forEach(game => {
+            let opt = document.createElement('option');
+            opt.value = game.file;
+            opt.innerHTML = game.name;
+            selector.appendChild(opt);
+        });
+    }
+
+    async function checkCacheStatus(url) {
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            for (let name of cacheNames) {
+                const cache = await caches.open(name);
+                const response = await cache.match(url);
+                if (response) return true;
+            }
+        }
+        return false;
+    }
+
+    async function bootEngine() {
+        const file = document.getElementById('gameSelect').value;
+        const target = document.getElementById('iframe-target');
+        const status = document.getElementById('status-bar');
+
+        status.innerText = "> VERIFYING LOCAL CACHE MATRIX...";
+        const isCached = await checkCacheStatus(file);
+
+        if (isCached) {
+            status.innerText = "> LOCAL ASSET DETECTED. COLD BOOT BYPASSED.";
+            status.style.color = "var(--success)";
+            target.innerHTML = `<iframe id="game-frame" src="${file}" tabindex="0"></iframe>`;
+            setTimeout(() => {
+                status.innerText = "> ENGINE RUNNING VIA OFFLINE CACHE STORAGE.";
+                status.style.color = "#0f0";
+                focusGame();
+            }, 500);
+        } else {
+            const confirmBoot = confirm("FIRST TIME INITIALIZATION: This game is not stored in your browser cache yet. It will download engine parts over Wi-Fi. Once downloaded, you can back it up to your device storage.");
+            if (confirmBoot) {
+                status.innerText = "> DOWNLOADING ASSETS INTO STORAGE GRID... PLEASE WAIT.";
+                status.style.color = "var(--warning)";
+                target.innerHTML = `<iframe id="game-frame" src="${file}" tabindex="0"></iframe>`;
+                
+                setTimeout(() => {
+                    status.innerText = "> ALL ENGINE DATA PERSISTED TO DISK. LOCAL BOOT ACTIVE.";
+                    status.style.color = "#0f0";
+                    focusGame();
+                }, 30000);
+            } else {
+                status.innerText = "> LAUNCH TERMINATED.";
+                status.style.color = "white";
+            }
+        }
+    }
+
+    function slideTo(name, index) {
+        const vp = document.getElementById('viewport');
+        const nav = document.getElementById('mainNav');
+        vp.style.transform = `translateX(-${index * 100}vw)`;
+        
+        if (index > 0) nav.classList.add('nav-side-mode');
+        else nav.classList.remove('nav-side-mode');
+    }
+
+    function sendMessage() {
+        const input = document.getElementById("msg");
+        const message = input.value.trim();
+        if (!message) return;
+
+        fetch("https://discord.com/api/webhooks/1492850737103765505/jV5m5oiaZjVpx95d_w3hhNOm09F-e113L4l61lSVBemtIETbQiFAm2wwabb33fIXf9Sw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: message })
+        })
+        .then(res => {
+            if (res.ok) { input.value = ""; alert("Transmission Sent."); }
+        });
+    }
+
+    function showModal(title, bodyText) {
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalBody').innerText = bodyText;
+        document.getElementById('systemModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('systemModal').style.display = 'none';
+        focusGame();
+    }
+
+    function openSettings() {
+        document.getElementById('touchControlsCheck').checked = touchControlsEnabled;
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function saveSettings() {
+        touchControlsEnabled = document.getElementById('touchControlsCheck').checked;
+        document.getElementById('settingsModal').style.display = 'none';
+        document.getElementById('touch-controller').style.display = touchControlsEnabled ? 'block' : 'none';
+        focusGame();
+    }
+
+    function exportGameState() {
+        try {
+            const backupObject = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const storageKey = localStorage.key(i);
+                backupObject[storageKey] = localStorage.getItem(storageKey);
+            }
+            const dataString = JSON.stringify(backupObject, null, 2);
+            const blob = new Blob([dataString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const downloader = document.createElement('a');
+            downloader.href = url;
+            downloader.download = `NovaTech_Saves_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(downloader);
+            downloader.click();
+            document.body.removeChild(downloader);
+            URL.revokeObjectURL(url);
+            alert("SUCCESS: Game saves exported.");
+        } catch (error) {
+            alert("ERROR: Export failed: " + error.message);
+        }
+    }
+
+    function triggerStateImport() { document.getElementById('importStateFile').click(); }
+
+    function importGameState(fileSelector) {
+        const sourceFile = fileSelector.files[0];
+        if (!sourceFile) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const parsedData = JSON.parse(event.target.result);
+                for (const key in parsedData) {
+                    if (parsedData.hasOwnProperty(key)) localStorage.setItem(key, parsedData[key]);
+                }
+                alert("Saves imported! Reloading framework...");
+                location.reload();
+            } catch (error) {
+                alert("FORMAT ERROR: " + error.message);
+            }
+        };
+        reader.readAsText(sourceFile);
+    }
+
+    async function exportCachedEngine() {
+        if (!('caches' in window)) return alert("Storage engine not supported on this browser device.");
+        
+        const targetFile = document.getElementById('gameSelect').value;
+        const status = document.getElementById('status-bar');
+        status.innerText = "> PACKAGING ENGINE BINARIES...";
+        
+        try {
+            const cacheNames = await caches.keys();
+            let matchedResponse = null;
+            
+            for (let name of cacheNames) {
+                const cache = await caches.open(name);
+                const response = await cache.match(targetFile);
+                if (response) {
+                    matchedResponse = response;
+                    break;
+                }
+            }
+            
+            if (!matchedResponse) {
+                return alert("ERROR: Please 'Initialize' and download the engine via Wi-Fi before trying to create a local package file.");
+            }
+            
+            const blobData = await matchedResponse.blob();
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const bundle = {
+                    filename: targetFile,
+                    binaryData: reader.result
+                };
+                
+                const blob = new Blob([JSON.stringify(bundle)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const downloader = document.createElement('a');
+                downloader.href = url;
+                downloader.download = `NovaEngine_${targetFile.replace('/', '_')}.json`;
+                document.body.appendChild(downloader);
+                downloader.click();
+                document.body.removeChild(downloader);
+                URL.revokeObjectURL(url);
+                status.innerText = "> ENGINE BACKUP PACKAGE COMPLETED.";
+            };
+            reader.readAsDataURL(blobData);
+            
+        } catch (err) {
+            alert("Backup execution failed: " + err.message);
+        }
+    }
+
+    function triggerEngineImport() { document.getElementById('importEngineFile').click(); }
+
+    async function importCachedEngine(fileSelector) {
+        const sourceFile = fileSelector.files[0];
+        if (!sourceFile || !('caches' in window)) return;
+        
+        const status = document.getElementById('status-bar');
+        status.innerText = "> RESTORING ENGINE FROM OFFLINE DISK RESOURCE...";
+
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            try {
+                const bundle = JSON.parse(event.target.result);
+                if (!bundle.binaryData || !bundle.filename) throw new Error("Invalid asset bundle signature.");
+                
+                const response = await fetch(bundle.binaryData);
+                const blob = await response.blob();
+                
+                const cache = await caches.open('v14-core-engine-cache');
+                await cache.put(
+                    new Request(bundle.filename),
+                    new Response(blob, { headers: { 'Content-Type': bundle.filename.endsWith('.zip') ? 'application/zip' : 'text/html' } })
+                );
+                
+                status.innerText = "> OFFLINE PACK INJECTED INTO CACHE SUCCESSFULLY.";
+                alert("SUCCESS: Engine pack restored from local file! You can now load this game completely offline without using network data.");
+                location.reload();
+            } catch (error) {
+                alert("RESTORE FAILED: " + error.message);
+            }
+        };
+        reader.readAsText(sourceFile);
+    }
+
+    function toggleFullscreen() {
+        const container = document.getElementById('emu-container');
+        if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => {
+                alert(`Fullscreen transition error: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(); }
+    });
+
+    const emuContainer = document.getElementById('emu-container');
+
+    function focusGame() {
+        const frame = document.getElementById('game-frame');
+        if (frame) {
+            frame.setAttribute('tabindex', '0');
+            frame.focus();
+            if (frame.contentWindow) frame.contentWindow.focus();
+        }
+    }
+
+    emuContainer.addEventListener('touchstart', (e) => { focusGame(); e.stopPropagation(); }, { passive: true });
+    emuContainer.addEventListener('mousedown', (e) => { focusGame(); e.stopPropagation(); });
+
+    document.querySelectorAll('.touch-btn').forEach(btn => {
+        const keyCode = btn.getAttribute('data-key');
+        if (!keyCode) return;
+
+        function handlePress(e) {
+            e.preventDefault(); focusGame();
+            if(btn.childNodes.length > 0) btn.childNodes[0].nodeValue = "O";
+            const frame = document.getElementById('game-frame');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: keyCode, code: keyCode, bubbles: true, cancelable: true, view: frame.contentWindow
+                }));
+            }
+        }
+
+        function handleRelease(e) {
+            e.preventDefault();
+            if(btn.childNodes.length > 0) btn.childNodes[0].nodeValue = "o";
+            const frame = document.getElementById('game-frame');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.dispatchEvent(new KeyboardEvent('keyup', {
+                    key: keyCode, code: keyCode, bubbles: true, cancelable: true, view: frame.contentWindow
+                }));
+            }
+        }
+
+        btn.addEventListener('touchstart', handlePress, { passive: false });
+        btn.addEventListener('touchend', handleRelease, { passive: false });
+        btn.addEventListener('mousedown', handlePress);
+        btn.addEventListener('mouseup', handleRelease);
+        btn.addEventListener('mouseleave', handleRelease);
+    });
+
+    updateEngineList();
+</script>
+
 </body>
 </html>
