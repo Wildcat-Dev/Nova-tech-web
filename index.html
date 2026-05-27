@@ -57,12 +57,6 @@
         #comms-screen { background-image: url('comms.png'); }
         #levian-screen { background-color: #000000; }
 
-        @media (max-width: 1024px) {
-            #main-screen { background-image: url('phoneandroid.png') !important; }
-            #games-screen { background-image: url('gamesandroid.png') !important; }
-            #comms-screen { background-image: url('commsandroid.png') !important; }
-        }
-
         /* Navigation HUD */
         nav {
             position: fixed; 
@@ -185,26 +179,30 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transform: translateY(-50px);
+            transform: translateY(-20px); 
             text-align: center;
             padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .levian-logo {
-            width: 400px;
-            height: 400px;
+            width: 256px; 
+            height: 256px; 
             object-fit: contain;
-            margin-bottom: -10px;
-            filter: drop-shadow(0 0 25px rgba(0, 162, 255, 0.15));
+            margin-bottom: 25px; 
         }
 
         .levian-text {
             font-family: 'Anurati', sans-serif;
-            font-size: 13px;
+            font-size: 18px; /* Slightly Bigger Typography Base */
             color: #cccccc;
             letter-spacing: 3px;
             line-height: 2;
-            max-width: 650px;
+            max-width: 700px;
+            text-transform: uppercase; /* Ensures strict fallback capitalization */
+            overflow-wrap: break-word;
+            word-wrap: break-word;
         }
 
         .levian-text a {
@@ -213,6 +211,10 @@
             transition: all 0.3s ease;
             border-bottom: 1px dashed rgba(0, 162, 255, 0.4);
             padding-bottom: 2px;
+            display: inline-block;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            text-transform: uppercase;
         }
 
         .levian-text a:hover {
@@ -348,6 +350,31 @@
             text-transform: uppercase;
             flex-grow: 1;
         }
+
+        /* ANDROID PORTRAIT & RESPONSIVE VIEWPORT ENGINE */
+        @media (max-width: 1024px) {
+            #main-screen { background-image: url('phoneandroid.png') !important; }
+            #games-screen { background-image: url('gamesandroid.png') !important; }
+            #comms-screen { background-image: url('commsandroid.png') !important; }
+        }
+
+        @media (max-width: 480px), (orientation: portrait) {
+            .levian-logo {
+                width: 190px; 
+                height: 190px;
+                margin-bottom: 20px;
+            }
+            .levian-text {
+                font-size: 16px; /* Retains clear, bold presence on Android Portrait */
+                letter-spacing: 2px; /* Balances word-wrapping limits with tracking requirements */
+                line-height: 1.9;
+                max-width: 100%;
+                padding: 0 20px;
+            }
+            .levian-container {
+                transform: translateY(-5px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -422,10 +449,10 @@
 
     <div id="levian-screen" class="screen">
         <div class="levian-container">
-            <img src="LEVIANICON.png" alt="Levian AI" class="levian-logo">
+            <img src="levianicon.png" alt="Levian AI" class="levian-logo">
             <p class="levian-text">
                 LEVIAN AI IS IN PROGRESS AND WILL BE SOON AVAILABLE AT <br>
-                <a href="HTTPS:\\NOVATECH.QZZ.IO/LEVIANAI" target="_blank">https://novatech.qzz.io/LevianAI</a>
+                <a href="https://novatech.qzz.io/LevianAI" target="_blank">HTTPS://NOVATECH.QZZ.IO/LEVIANAI</a>
             </p>
         </div>
     </div>
