@@ -52,12 +52,12 @@
         .side-btn {
             background: none; border: none; color: var(--text-muted);
             cursor: pointer; font-size: 24px; transition: 0.3s;
-            margin-top: auto; /* Pushes settings to bottom */
+            margin-top: auto;
         }
         .side-btn:hover { color: var(--e-blue); text-shadow: 0 0 10px var(--e-blue); }
 
         .save-btn {
-            margin-top: 80px; /* Space below the logo */
+            margin-top: 80px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border);
             color: #aaa;
@@ -93,7 +93,6 @@
             width: 100%;
         }
 
-        /* The Hero Logo & Its Fluid Transition */
         #hero-logo {
             position: fixed;
             top: 50%;
@@ -103,7 +102,6 @@
             height: 256px;
             object-fit: contain;
             z-index: 50;
-            /* Cubic-bezier creates the "dip down before moving" effect */
             transition: top 0.8s cubic-bezier(0.5, -0.4, 0.2, 1), 
                         left 0.8s cubic-bezier(0.5, -0.4, 0.2, 1), 
                         width 0.8s ease, 
@@ -122,7 +120,7 @@
             left: 35px;
             width: 40px;
             height: 40px;
-            transform: translate(-50%, -50%); /* Keeps it centered over the sidebar slot */
+            transform: translate(-50%, -50%);
         }
 
         @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
@@ -137,7 +135,7 @@
             gap: 20px;
             opacity: 0;
             transition: opacity 0.8s ease 0.4s;
-            padding-bottom: 120px; /* Space for input bar */
+            padding-bottom: 120px;
         }
         body.chat-active #chat-stream { opacity: 1; }
 
@@ -163,9 +161,9 @@
             cursor: text;
             transition: all 0.3s ease;
             z-index: 100;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Adjust input container on mobile */
         @media (max-width: 768px) { #input-container { width: 92%; } }
 
         #input-container:focus-within { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -184,9 +182,16 @@
             padding: 8px 0;
             overflow-y: auto;
         }
-        textarea::placeholder { color: var(--text-muted); font-size: 18px; }
+        
+        /* Stylized Monospace Terminal Font Variant for Placeholder */
+        textarea::placeholder { 
+            color: var(--text-muted); 
+            font-size: 14px; 
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
 
-        /* Controls Block */
         .controls { display: flex; align-items: center; gap: 10px; padding-bottom: 4px; }
 
         select {
@@ -199,9 +204,18 @@
             cursor: pointer;
             outline: none;
             transition: 0.3s;
+            -webkit-appearance: none;
         }
-        select:hover { border-color: var(--e-blue); box-shadow: 0 0 10px rgba(0,243,255,0.2); color: #fff; }
-        select:active, select:focus { border-color: var(--g-yellow); box-shadow: 0 0 10px rgba(255,215,0,0.2); }
+        
+        /* Interactive Glowing Dropdown rules */
+        @media (hover: hover) {
+            select:hover { border-color: var(--e-blue); box-shadow: 0 0 10px rgba(0,243,255,0.2); color: #fff; }
+            select:active { border-color: var(--g-yellow); box-shadow: 0 0 10px rgba(255,215,0,0.2); }
+        }
+        select:focus { border-color: var(--g-yellow); }
+        @media (hover: none) {
+            select:active { border-color: var(--g-yellow); box-shadow: 0 0 10px rgba(255,215,0,0.2); }
+        }
 
         .send-btn {
             background: transparent;
@@ -216,12 +230,11 @@
         }
         .send-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
-        /* PC Hover/Active States */
+        /* Button Glow Configurations */
         @media (hover: hover) {
             .send-btn:hover { color: var(--e-blue); filter: drop-shadow(0 0 8px var(--e-blue)); }
             .send-btn:active { color: var(--g-yellow); filter: drop-shadow(0 0 8px var(--g-yellow)); }
         }
-        /* Touch Device States */
         @media (hover: none) {
             .send-btn:active { color: var(--g-yellow); filter: drop-shadow(0 0 8px var(--g-yellow)); }
         }
@@ -242,36 +255,45 @@
         <div id="chat-stream"></div>
     </div>
 
-    <div id="input-container" onclick="document.getElementById('userInput').focus()">
-        <textarea id="userInput" placeholder="Chill With Levian..." rows="1" oninput="autoResize(this)" onkeydown="handleInput(event)"></textarea>
+    <div id="input-container">
+        <textarea id="userInput" placeholder="Talk With Levian..." rows="1" oninput="autoResize(this)" onkeydown="handleInput(event)"></textarea>
         <div class="controls">
             <select id="modelSelect">
                 <option value="gemini-1.5-flash-8b">3.1 flash-lyte</option>
                 <option value="gemini-1.5-flash" selected>3.5 flash</option>
                 <option value="gemini-1.5-pro">3.1 pro</option>
             </select>
-            <button class="send-btn" onclick="sendMessage()">
+            <button class="send-btn" onclick="sendMessage(event)">
                 <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
         </div>
     </div>
 
     <script>
-        // --- CORE STATE ---
-        const API_KEY = "YOUR_API_KEY_HERE"; // PUT YOUR GEMINI API KEY HERE
+        const API_KEY = "YOUR_API_KEY_HERE"; 
         let isFirstMessage = true;
-        let chatHistoryRAM = []; // Stores the current session text
+        let chatHistoryRAM = []; 
 
         const body = document.body;
         const logo = document.getElementById('hero-logo');
         const stream = document.getElementById('chat-stream');
         const input = document.getElementById('userInput');
         const modelSelect = document.getElementById('modelSelect');
+        const container = document.getElementById('input-container');
 
-        // Detect Mobile for Enter Key Logic
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        // --- UI FUNCTIONS ---
+        // --- BULLETPROOF TOUCH & CLICK DELEGATION ---
+        function focusInput(e) {
+            // Do not force focus if clicking dropdown options or the send button directly
+            if (e.target !== modelSelect && !modelSelect.contains(e.target) && !e.target.closest('.send-btn')) {
+                e.preventDefault();
+                input.focus();
+            }
+        }
+        container.addEventListener('click', focusInput);
+        container.addEventListener('touchstart', focusInput, { passive: false });
+
         function autoResize(el) {
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight) + 'px';
@@ -279,14 +301,10 @@
 
         function handleInput(e) {
             if (!isMobile) {
-                // PC: Enter = Send, Shift+Enter = New Line
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    sendMessage();
+                    sendMessage(e);
                 }
-            } else {
-                // Android/Mobile: Enter = New Line automatically. 
-                // Only the visual send button triggers send.
             }
         }
 
@@ -298,11 +316,9 @@
             }
         }
 
-        // --- RAM SAVER ---
         function saveChat() {
             if (chatHistoryRAM.length === 0) return alert("Nothing to save yet!");
             
-            // Format array into text file layout
             let txtContent = chatHistoryRAM.map(msg => 
                 `${msg.role === 'user' ? 'user' : 'Ai'}: ${msg.parts[0].text}`
             ).join('\n\n');
@@ -316,34 +332,30 @@
             URL.revokeObjectURL(url);
         }
 
-        // --- API INTEGRATION ---
-        async function sendMessage() {
+        async function sendMessage(e) {
+            if(e) e.stopPropagation(); // Stop bubbling to prevent focus loops
+            
             const text = input.value.trim();
             if (!text) return;
 
-            triggerAppMode(); // Fire layout transition
+            triggerAppMode(); 
 
-            // 1. Post User Message
             stream.innerHTML += `<div class="msg user">${escapeHTML(text)}</div>`;
             input.value = '';
             input.style.height = 'auto';
             stream.scrollTop = stream.scrollHeight;
 
-            // Save to RAM
             chatHistoryRAM.push({ role: "user", parts: [{ text: text }] });
-
-            // Start thinking animation
             logo.classList.add('spinning');
 
             try {
-                // Grab the currently selected model
                 const selectedModel = modelSelect.value;
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${API_KEY}`;
                 
                 const res = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: chatHistoryRAM }) // Send whole context
+                    body: JSON.stringify({ contents: chatHistoryRAM }) 
                 });
 
                 if (!res.ok) throw new Error(`API Error: ${res.status}`);
@@ -351,17 +363,13 @@
                 const data = await res.json();
                 const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response received.";
                 
-                // 2. Post AI Message
                 stream.innerHTML += `<div class="msg ai">${escapeHTML(aiResponse)}</div>`;
-                
-                // Save to RAM
                 chatHistoryRAM.push({ role: "model", parts: [{ text: aiResponse }] });
 
             } catch (err) {
                 stream.innerHTML += `<div class="msg ai" style="color:#ff4444;">Error: ${err.message}</div>`;
             }
 
-            // Stop thinking animation
             logo.classList.remove('spinning');
             stream.scrollTop = stream.scrollHeight;
         }
