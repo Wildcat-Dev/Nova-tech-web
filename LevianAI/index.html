@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Levian AI</title>
+    <link rel="icon" type="image/png" href="LEVIANICON.png">
+    
+    <style>
+        @font-face {
+            font-family: 'Anurati';
+            src: url('Anurati-Regular.otf') format('opentype');
+        }
+
+        :root {
+            --bg-main: #000000;
+            --bg-bar: #111111;
+            --e-blue: #00f3ff;
+            --g-yellow: #ffd700;
+            --text-main: #ffffff;
+            --text-muted: #555555;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body, html {
+            width: 100%; height: 100%;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* --- STATIC BRANDING ICON (Top Left) --- */
+        #top-left-logo {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+            z-index: 110;
+            transition: opacity 0.4s ease;
+            opacity: 0.8;
+        }
+        
+        /* Stays visible until the chat bar mode triggers */
+        body.chat-active #top-left-logo {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- SIDEBAR & SETTINGS --- */
+        #sidebar {
+            width: 70px;
+            height: 100%;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 0;
+            background: var(--bg-main);
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.5s ease;
+            position: relative;
+            z-index: 20;
+        }
+
+        body.chat-active #sidebar {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .side-btn {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 26px; transition: 0.3s;
+            margin-top: auto;
+            outline: none;
+        }
+        
+        /* Hover turns neon blue, Active menu state turns golden */
+        .side-btn:hover { color: var(--e-blue); filter: drop-shadow(0 0 8px var(--e-blue)); }
+        .side-btn.active { color: var(--g-yellow) !important; filter: drop-shadow(0 0 8px var(--g-yellow)) !important; }
+
+        /* Slide-out Settings Menu Container */
+        #settings-menu {
+            position: fixed;
+            top: 0; 
+            left: 70px;
+            width: 240px; 
+            height: 100%;
+            background: #080808;
+            border-right: 1px solid var(--border);
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 15;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #settings-menu.open {
+            transform: translateX(0);
+        }
+
+        .menu-title {
+            font-family: 'Anurati', sans-serif;
+            color: #fff;
+            font-size: 14px;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .save-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: #eee;
+            font-size: 11px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .save-btn:hover { border-color: var(--e-blue); color: var(--e-blue); background: rgba(0, 243, 255, 0.05); }
+        .save-btn:active { border-color: var(--g-yellow); color: var(--g-yellow); }
+
+        /* --- NOTIFICATION TOAST --- */
+        #toast {
+            position: fixed;
+            bottom: 110px;
+            left: 90px;
+            background: #111111;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px 35px 16px 20px;
+            width: 290px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(15px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            cursor: pointer; /* Makes the entire block feel like a clean link */
+        }
+
+        #toast:hover {
+            border-color: var(--e-blue);
+        }
+
+        #toast.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        #toast .title { 
+            font-family: 'Anurati', sans-serif; 
+            font-size: 14px; 
+            color: var(--text-main); 
+            margin-bottom: 6px; 
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        #toast .desc { 
+            font-family: 'Segoe UI', sans-serif; 
+            font-size: 12px; 
+            color: #aaa; 
+            line-height: 1.4;
+        }
+        #toast .desc span {
+            color: var(--e-blue);
+            text-decoration: underline;
+        }
+        #toast .close-btn { 
+            position: absolute; 
+            top: 12px; 
+            right: 14px; 
+            cursor: pointer; 
+            color: #555; 
+            font-size: 12px; 
+            transition: 0.2s;
+        }
+        #toast .close-btn:hover { color: #fff; }
+
+        /* --- MAIN AREA & LANDING ELEMENTS --- */
+        #main-content {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #beta-text {
+            position: absolute;
+            top: 22%;
+            left: 8%; /* Shifted clean to the left side */
+            font-family: 'Anurati', sans-serif;
+            font-size: 16px;
+            letter-spacing: 5px;
+            color: var(--e-blue);
+            text-transform: uppercase;
+            opacity: 0.7;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+            transition: opacity 0.4s ease;
+            z-index: 5;
+        }
+
+        #hero-text {
+            position: absolute;
+            top: 76%; /* Lowered down significantly to fully clear logo area */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #ddd;
+            transition: opacity 0.4s ease;
+            text-align: center;
+            width: 100%;
+        }
+
+        #hero-logo-center {
+            position: fixed;
+            top: 36%; /* Pushed higher up to give breathing room */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 256px;
+            height: 256px;
+            object-fit: contain;
+            z-index: 50;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        body.chat-active #beta-text { opacity: 0; pointer-events: none; }
+        body.chat-active #hero-text { opacity: 0; pointer-events: none; }
+        body.chat-active #hero-logo-center { opacity: 0; transform: translate(-50%, -50%) scale(0.8); pointer-events: none; }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- CHAT STREAM --- */
+        #chat-stream {
+            flex-grow: 1;
+            padding: 40px 10%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            opacity: 0;
+            transition: opacity 0.8s ease 0.4s;
+            padding-bottom: 140px;
+        }
+        body.chat-active #chat-stream { opacity: 1; }
+
+        .msg-wrapper {
+            display: flex;
+            width: 100%;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        .msg-wrapper.user-wrapper {
+            justify-content: flex-end;
+        }
+
+        /* Pure avatar asset mapping rules: No borders, backgrounds, or rings */
+        .ai-avatar {
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            flex-shrink: 0;
+        }
+        
+        .ai-avatar.thinking {
+            animation: spin 2.2s linear infinite;
+        }
+
+        .msg { max-width: 75%; line-height: 1.6; font-size: 15px; padding: 12px 18px; border-radius: 12px; word-wrap: break-word; }
+        .msg.user { background: #161616; border: 1px solid var(--border); color: #fff; }
+        .msg.ai { background: transparent; color: #ccc; padding-left: 5px; }
+
+        /* Ultra-fast cursor tick styles */
+        .typing-cursor {
+            font-weight: bold;
+            color: var(--e-blue);
+            animation: blink 0.4s steps(2, start) infinite;
+            margin-left: 2px;
+        }
+        @keyframes blink { to { visibility: hidden; } }
+
+        /* --- INPUT BAR --- */
+        #input-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            background: var(--bg-bar);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            cursor: text;
+            transition: all 0.3s ease;
+            z-index: 100;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (max-width: 768px) { #input-container { width: 92%; } }
+        #input-container:focus-within { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        textarea {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 16px;
+            resize: none;
+            min-height: 24px;
+            max-height: 120px;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+        
+        textarea::placeholder { 
+            color: var(--text-muted); 
+            font-size: 14px; 
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .controls { display: flex; align-items: center; gap: 10px; padding-bottom: 4px; }
+
+        select {
+            background: #1a1a1a;
+            color: #aaa;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+            transition: 0.3s;
+            -webkit-appearance: none;
+        }
+
+        .send-btn {
+            background: transparent;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            transition: 0.3s;
+        }
+        .send-btn svg { width: 24px; height: 24px; fill: currentColor; }
+        .send-btn:hover { color: var(--e-blue); filter: drop-shadow(0 0 8px var(--e-blue)); }
+    </style>
+</head>
+<body>
+
+    <img src="LEVIANICON.png" id="top-left-logo" alt="Levian Core">
+    <img src="LEVIANICON.png" id="hero-logo-center" alt="Levian AI">
+
+    <div id="settings-menu">
+        <div class="menu-title">SETTINGS</div>
+        <button class="save-btn" onclick="saveChat()">Export Chat Log</button>
+    </div>
+
+    <div id="sidebar">
+        <button id="settingsBtn" class="side-btn" onclick="toggleSettings(event)">⚙</button>
+    </div>
+
+    <div id="toast" onclick="handleToastClick(event)">
+        <div class="close-btn" onclick="closeToast(event)">✕</div>
+        <div class="title">DID YOU KNOW?</div>
+        <div class="desc">You can save your chats in a text file in the <span>settings</span></div>
+    </div>
+
+    <div id="main-content">
+        <h2 id="beta-text">Beta Preview</h2>
+        <h1 id="hero-text">Need anything?</h1>
+        <div id="chat-stream"></div>
+    </div>
+
+    <div id="input-container">
+        <textarea id="userInput" placeholder="Talk With Levian..." rows="1" oninput="autoResize(this)" onkeydown="handleInput(event)"></textarea>
+        <div class="controls">
+            <select id="modelSelect">
+                <option value="gemini-3.1-flash-lite">3.1 flash-lyte</option>
+                <option value="gemini-3.5-flash" selected>3.5 flash</option>
+                <option value="gemini-2.5-pro">2.5 pro</option>
+            </select>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage(event)">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let isFirstMessage = true;
+        let chatHistoryRAM = []; 
+        let toastTimer;
+
+        const body = document.body;
+        const stream = document.getElementById('chat-stream');
+        const input = document.getElementById('userInput');
+        const modelSelect = document.getElementById('modelSelect');
+        const container = document.getElementById('input-container');
+        
+        const settingsMenu = document.getElementById('settings-menu');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const toast = document.getElementById('toast');
+
+        function toggleSettings(e) {
+            if(e) e.stopPropagation();
+            settingsMenu.classList.toggle('open');
+            settingsBtn.classList.toggle('active');
+        }
+
+        // Action router logic for handling toast interactions cleanly
+        function handleToastClick(e) {
+            // Ensure clicking the 'X' doesn't fire the menu toggle
+            if (e.target.classList.contains('close-btn')) return;
+            
+            closeToast();
+            if (!settingsMenu.classList.contains('open')) {
+                toggleSettings();
+            }
+        }
+
+        function triggerToast() {
+            setTimeout(() => {
+                toast.classList.add('show');
+                toastTimer = setTimeout(() => {
+                    closeToast();
+                }, 10000); 
+            }, 500); 
+        }
+
+        function closeToast(e) {
+            if(e) e.stopPropagation();
+            toast.classList.remove('show');
+            clearTimeout(toastTimer);
+        }
+
+        function handleInput(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(e);
+            }
+        }
+
+        function focusInput(e) {
+            if (e.target !== modelSelect && !modelSelect.contains(e.target) && !e.target.closest('.send-btn') && !e.target.closest('.side-btn') && !e.target.closest('#settings-menu')) {
+                e.preventDefault();
+                input.focus();
+            }
+        }
+        container.addEventListener('click', focusInput);
+        container.addEventListener('touchstart', focusInput, { passive: false });
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+        }
+
+        function triggerAppMode() {
+            if (isFirstMessage) {
+                body.classList.add('chat-active');
+                triggerToast(); 
+                isFirstMessage = false;
+            }
+        }
+
+        function formatMarkdown(str) {
+            let clean = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            clean = clean.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            clean = clean.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            return clean.replace(/\n/g, '<br>');
+        }
+
+        function runFastTypewriter(targetElement, fullRawText) {
+            let i = 0;
+            targetElement.innerHTML = '<span class="text-payload"></span><span class="typing-cursor">|</span>';
+            const payloadContainer = targetElement.querySelector('.text-payload');
+            const cursorBlock = targetElement.querySelector('.typing-cursor');
+            
+            const speed = 4;       
+            const frameStep = 5; // Multi-character chunks for instantaneous feeling output
+            
+            const printClock = setInterval(() => {
+                i += frameStep;
+                const slice = fullRawText.slice(0, i);
+                payloadContainer.innerHTML = formatMarkdown(slice);
+                
+                // Smart auto-scroll rules: Only follow text downward if the user is currently at the bottom baseline
+                const userDistanceFromBottom = stream.scrollHeight - stream.scrollTop - stream.clientHeight;
+                if (userDistanceFromBottom < 280) {
+                    stream.scrollTop = stream.scrollHeight;
+                }
+                
+                if (i >= fullRawText.length) {
+                    clearInterval(printClock);
+                    cursorBlock.remove(); 
+                }
+            }, speed);
+        }
+
+        function saveChat() {
+            if (chatHistoryRAM.length === 0) return;
+            
+            let txtContent = chatHistoryRAM.map(msg => {
+                if (msg.role === 'user' && msg.parts[0].text.startsWith("System instruction:")) return "";
+                return `${msg.role === 'user' ? 'User' : 'Levian'}: ${msg.parts[0].text}`;
+            }).filter(Boolean).join('\n\n');
+
+            const blob = new Blob([txtContent], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Levian_ChatLog.txt";
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            toggleSettings();
+        }
+
+        async function sendMessage(e) {
+            if(e) e.stopPropagation(); 
+            
+            const text = input.value.trim();
+            if (!text) return;
+
+            triggerAppMode(); 
+
+            stream.innerHTML += `
+                <div class="msg-wrapper user-wrapper">
+                    <div class="msg user">${formatMarkdown(text)}</div>
+                </div>`;
+                
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Hard snap to baseline display immediately upon processing user input action
+            stream.scrollTop = stream.scrollHeight;
+
+            // Simple Identity setup loop: Strip all custom persona behaviors
+            if (chatHistoryRAM.length === 0) {
+                chatHistoryRAM.push({ 
+                    role: "user", 
+                    parts: [{ text: "System instruction: You are an AI named Levian. You do not have any other specific personality traits or background descriptions. You only know that your name is Levian." }] 
+                });
+                chatHistoryRAM.push({ role: "model", parts: [{ text: "Understood." }] });
+            }
+
+            chatHistoryRAM.push({ role: "user", parts: [{ text: text }] });
+            
+            const aiMsgId = "ai-msg-" + Date.now();
+            const aiAvatarId = "ai-avatar-" + Date.now();
+            
+            stream.innerHTML += `
+                <div class="msg-wrapper">
+                    <img src="LEVIANICON.png" id="${aiAvatarId}" class="ai-avatar thinking" alt="L">
+                    <div class="msg ai" id="${aiMsgId}"></div>
+                </div>`;
+                
+            stream.scrollTop = stream.scrollHeight;
+
+            try {
+                const selectedModel = modelSelect.value;
+                const workerUrl = `https://nova-tech-web.aroush-yt31.workers.dev/levian?model=${selectedModel}`;
+                
+                const res = await fetch(workerUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: chatHistoryRAM }) 
+                });
+
+                const data = await res.json();
+                let aiResponse = "";
+                let validPayload = false;
+                
+                if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    aiResponse = data.candidates[0].content.parts[0].text;
+                    validPayload = true;
+                } else if (data.error) {
+                    aiResponse = `API Error: ${data.error.message || JSON.stringify(data.error)}`;
+                } else {
+                    aiResponse = `Unknown format structure returned from cloud proxy worker configuration block.`;
+                }
+                
+                document.getElementById(aiAvatarId).classList.remove('thinking');
+                
+                const targetElement = document.getElementById(aiMsgId);
+                runFastTypewriter(targetElement, aiResponse);
+                
+                if (validPayload) {
+                    chatHistoryRAM.push({ role: "model", parts: [{ text: aiResponse }] });
+                }
+
+            } catch (err) {
+                document.getElementById(aiAvatarId).classList.remove('thinking');
+                document.getElementById(aiMsgId).innerHTML = `<span style="color:#ff4444;">Network Core Failure: ${err.message}</span>`;
+            }
+            
+            // Final finish block scroll confirmation: Will NOT snap down if user has manually scrolled upwards
+            if (stream.scrollHeight - stream.scrollTop - stream.clientHeight < 280) {
+                stream.scrollTop = stream.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
