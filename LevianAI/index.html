@@ -419,16 +419,36 @@
                     body: JSON.stringify({ contents: chatHistoryRAM }) 
                 });
 
-                if (!res.ok) throw new Error(`API Error: ${res.status}`);
-                
+                // Read the raw response
                 const data = await res.json();
-                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response received.";
+                
+                // Print it to the browser console (Press F12 to view this)
+                console.log("Worker Response Data:", data); 
+
+                let aiResponse = "";
+                
+                // Scenario 1: Standard Gemini API Success
+                if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    aiResponse = data.candidates[0].content.parts[0].text;
+                } 
+                // Scenario 2: The API threw an error (e.g., bad API key, wrong format)
+                else if (data.error) {
+                    aiResponse = `API Error: ${data.error.message || JSON.stringify(data.error)}`;
+                } 
+                // Scenario 3: Custom Worker format or completely broken JSON
+                else {
+                    aiResponse = `Unknown Worker format. Press F12 to check the Console log!`;
+                }
                 
                 stream.innerHTML += `<div class="msg ai">${escapeHTML(aiResponse)}</div>`;
-                chatHistoryRAM.push({ role: "model", parts: [{ text: aiResponse }] });
+                
+                // Only save to history if it wasn't an error
+                if (data.candidates) {
+                    chatHistoryRAM.push({ role: "model", parts: [{ text: aiResponse }] });
+                }
 
             } catch (err) {
-                stream.innerHTML += `<div class="msg ai" style="color:#ff4444;">Error: ${err.message}</div>`;
+                stream.innerHTML += `<div class="msg ai" style="color:#ff4444;">Network/Fetch Error: ${err.message}</div>`;
             }
 
             logo.classList.remove('spinning');
