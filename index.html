@@ -32,10 +32,10 @@
             color: white; 
         }
 
-        /* Viewport Logic - 4 Screens */
+        /* Viewport Logic - 5 Screens (Updated from 4) */
         #viewport { 
             display: flex; 
-            width: 400vw; 
+            width: 500vw; 
             height: 100vh; 
             transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); 
         }
@@ -56,6 +56,7 @@
         #games-screen { background-color: #050505; background-image: url('games.png'); }
         #comms-screen { background-image: url('comms.png'); }
         #levian-screen { background-color: #000000; }
+        #stats-screen { background-color: #050505; } /* New 5th Screen Background */
 
         /* Navigation HUD */
         nav {
@@ -220,6 +221,30 @@
             color: #fff;
             text-shadow: 0 0 10px var(--accent);
             border-bottom-color: #fff;
+        }
+
+        /* 5th Page CSS */
+        .stats-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 15px;
+            border: 1px solid var(--border-glow);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 30px rgba(0,162,255,0.1);
+        }
+
+        .stats-title {
+            font-family: 'Anurati', sans-serif;
+            color: var(--accent);
+            letter-spacing: 5px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-size: 24px;
         }
 
         /* Core Canvas controls rules */
@@ -391,6 +416,7 @@
             <button onclick="selectPage('SONIC', 1)" class="dropdown-item">SONIC</button>
             <button onclick="selectPage('COMMS', 2)" class="dropdown-item">COMMS</button>
             <button onclick="selectPage('LEVIAN AI', 3)" class="dropdown-item">LEVIAN AI</button>
+            <button onclick="selectPage('STATS', 4)" class="dropdown-item">STATS</button>
         </div>
     </div>
 </nav>
@@ -452,6 +478,16 @@
                 LEVIAN AI IS IN PROGRESS AND WILL BE SOON AVAILABLE AT <br>
                 <a href="https://novatech.qzz.io/LevianAI" target="_blank">HTTPS://NOVATECH.QZZ.IO/LEVIANAI</a>
             </p>
+        </div>
+    </div>
+
+    <!-- NEW 5TH SCREEN: LIVE STATS -->
+    <div id="stats-screen" class="screen">
+        <div class="stats-container">
+            <h2 class="stats-title">SYSTEM TRAFFIC</h2>
+            <p style="font-size: 14px; letter-spacing: 2px; color: #ccc; margin-bottom: 20px; font-family: monospace;">HOW MANY PEOPLE HAVE SEEN THIS WEBSITE:</p>
+            <!-- Auto-incrementing IP-based Visitor Counter API Badge styled for your theme -->
+            <img src="https://hits.sh/novatech.qzz.io.svg?style=for-the-badge&label=UNIQUE%20VISITORS&color=00a2ff&labelColor=111111" alt="Visitor Count">
         </div>
     </div>
 
@@ -816,20 +852,17 @@
             if(btn.childNodes.length > 0) btn.childNodes[0].nodeValue = "O";
             const frame = document.getElementById('game-frame');
             if (frame && frame.contentWindow) {
-                frame.contentWindow.dispatchEvent(new KeyboardEvent('keydown', {
-                    key: keyCode, code: keyCode, bubbles: true, cancelable: true, view: frame.contentWindow
-                }));
+                frame.contentWindow.dispatchEvent(new KeyboardEvent('keydown', { key: keyCode }));
             }
         }
-
+        
         function handleRelease(e) {
             e.preventDefault();
             if(btn.childNodes.length > 0) btn.childNodes[0].nodeValue = "o";
             const frame = document.getElementById('game-frame');
             if (frame && frame.contentWindow) {
-                frame.contentWindow.dispatchEvent(new KeyboardEvent('keyup', {
-                    key: keyCode, code: keyCode, bubbles: true, cancelable: true, view: frame.contentWindow
-                }));            }
+                frame.contentWindow.dispatchEvent(new KeyboardEvent('keyup', { key: keyCode }));
+            }
         }
 
         btn.addEventListener('touchstart', handlePress, { passive: false });
@@ -838,17 +871,6 @@
         btn.addEventListener('mouseup', handleRelease);
         btn.addEventListener('mouseleave', handleRelease);
     });
-
-    updateEngineList();
 </script>
-
-<div id="custom-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 9999;">
-    <div style="background: #1f2833; border: 2px solid #66fcf1; padding: 25px; border-radius: 10px; text-align: center; max-width: 400px; width: 85%; font-family: sans-serif;">
-        <h3 style="color: #66fcf1; margin-top: 0;">System Message</h3>
-        <p style="margin: 15px 0 20px 0; line-height: 1.5; color: #fff;">Powering up core systems... This will take a moment to load.</p>
-        <button style="background: #66fcf1; color: #0b0c10; border: none; padding: 10px 25px; border-radius: 5px; font-weight: bold; cursor: pointer;" onclick="document.getElementById('custom-modal').style.opacity='0'; document.getElementById('custom-modal').style.pointerEvents='none';">Acknowledge</button>
-    </div>
-</div>
-
 </body>
 </html>
