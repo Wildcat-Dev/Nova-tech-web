@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Privacy Policy - Levian AI</title>
+    <link rel="icon" type="image/png" href="LEVIANICON.png">
+    
+    <style>
+        @font-face {
+            font-family: 'Anurati';
+            src: url('Anurati-Regular.otf') format('opentype');
+        }
+
+        .anurati-font, .brand-name {
+            font-family: 'Anurati', sans-serif !important;
+            text-transform: uppercase !important;
+        }
+
+        :root {
+            --bg-color: #050505;
+            --glass-bg: rgba(20, 20, 20, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent: #00f3ff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body, html {
+            width: 100%; min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+        }
+
+        header {
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        #top-left-logo {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            opacity: 0.9;
+        }
+
+        .brand-name {
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .back-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back-btn:hover {
+            background: var(--glass-hover);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        main {
+            width: 100%;
+            max-width: 850px;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .policy-card {
+            border-radius: 20px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 15px;
+        }
+
+        .effective-date {
+            font-size: 13px;
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin-top: -15px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-top: 10px;
+        }
+
+        p, ul {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+
+        ul {
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        li strong {
+            color: var(--text-main);
+        }
+
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: 30px;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--glass-border);
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="glass">
+        <a href="/" class="brand-container">
+            <img src="LEVIANICON.png" id="top-left-logo" alt="Logo">
+            <span class="brand-name">LEVIAN AI</span>
+        </a>
+        <a href="/" class="back-btn">← Back to App</a>
+    </header>
+
+    <main>
+        <div class="policy-card glass">
+            <h1>Privacy Policy</h1>
+            <div class="effective-date">Effective Date: March 20, 2026</div>
+
+            <p>Welcome to <strong>Levian AI</strong> (accessible at levianai.qzz.io). We respect your privacy and are committed to protecting any basic information you share with us when using our platform.</p>
+
+            <h2>1. Information We Collect</h2>
+            <p>When you choose to sign in using Google Sign-In, we only collect and access non-sensitive account profile details required for identification and session sync:</p>
+            <ul>
+                <li><strong>Google Account Email Address:</strong> Used to securely isolate and identify your saved chat sessions.</li>
+                <li><strong>Profile Name & Picture:</strong> Used solely to display your user profile state within the application interface.</li>
+                <li><strong>Chat History Data:</strong> Conversations and prompt inputs stored locally or synced via your account state to provide session continuity.</li>
+            </ul>
+
+            <h2>2. How We Use Your Information</h2>
+            <p>The minimal data we retrieve is used strictly for core app functionality:</p>
+            <ul>
+                <li>To authenticate your identity and maintain your active session.</li>
+                <li>To sync and retrieve your saved conversational history across reloads.</li>
+                <li>We do <strong>not</strong> sell, rent, trade, or share your personal information or chat logs with any third parties.</li>
+            </ul>
+
+            <h2>3. Data Storage and Security</h2>
+            <p>Your session data and chat logs are stored locally on your device via browser storage (`localStorage`) and/or securely synchronized under your designated user account. We employ standard protective practices to ensure safe handling of your credentials.</p>
+
+            <h2>4. Third-Party Services</h2>
+            <p>We utilize Google Identity Services for user authentication. Your interaction with Google Sign-In is subject to Google's respective privacy policies and terms of service.</p>
+
+            <h2>5. Changes to This Policy</h2>
+            <p>We may update our Privacy Policy from time to time. Any changes will be posted directly on this page with an updated effective date.</p>
+
+            <h2>6. Contact Us</h2>
+            <p>If you have any questions or concerns regarding this Privacy Policy, you can reach out via the support email at <strong>support@novatech.qzz.io</strong> or else visit the main page at <strong>novatech.qzz.io</strong>.</p>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 ONYX.
+    </footer>
+
+</body>
+</html>
