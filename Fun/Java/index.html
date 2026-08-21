@@ -1,129 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Download Portal</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-color: #3b82f6;
-            --accent-hover: #2563eb;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-        }
-
-        .container {
-            background-color: var(--card-bg);
-            border-radius: 1rem;
-            padding: 2rem;
-            width: 100%;
-            max-width: 480px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .screen-info {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-            padding: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 0.5rem;
-        }
-
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .btn-download {
-            display: block;
-            background-color: var(--accent-color);
-            color: #ffffff;
-            text-decoration: none;
-            padding: 1rem 1.25rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            font-size: 1rem;
-            text-align: center;
-            word-break: break-all;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn-download:hover {
-            background-color: var(--accent-hover);
-        }
-
-        /* Responsive styling for small/mobile screens */
-        @media (max-width: 480px) {
-            .container {
-                padding: 1.25rem;
-            }
-            
-            .btn-download {
-                padding: 1.1rem;
-            }
-        }
-    </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Download</title>
 </head>
-<body>
+<body style="background-color: #ffffff; color: #000000; margin: 0; padding: 4px; font-family: sans-serif; font-size: 12px;">
 
-    <div class="container">
-        <h1>Audio Downloads</h1>
-        <div class="screen-info" id="screen-info">
-            Detecting screen size...
+    <!-- Default border box for 128x160 and modern screens -->
+    <div style="border: 1px solid #000000; padding: 6px; background-color: #ffffff; text-align: left;">
+        
+        <div style="margin-bottom: 6px;">
+            <a href="/s4e2z1a4.mp3" download="s4e2z1a4.mp3" style="color: #0000FF; text-decoration: underline;">download s4e2z1a4.mp3</a>
+        </div>
+        
+        <div>
+            <a href="/s4e2z5a1.mp3" download="s4e2z5a1.mp3" style="color: #0000FF; text-decoration: underline;">download s4e2z5a1.mp3</a>
         </div>
 
-        <div class="button-group">
-            <a href="s4e2z1a3.mp3" download="s4e2z1a3.mp3" class="btn-download">
-                Download s4e2z1a3.mp3
-            </a>
-
-            <a href="s4e2z5a1.mp3" download="s4e2z5a1.mp3" class="btn-download">
-                Download s4e2z5a1.mp3
-            </a>
-        </div>
     </div>
 
-    <script>
-        // Broadly-compatible JavaScript for modern browsers & legacy engines (Opera Mini / J2ME)
-        function updateScreenInfo() {
-            var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-            var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-            var screenInfo = document.getElementById('screen-info');
-            if (screenInfo) {
-                screenInfo.innerHTML = 'Screen Size: ' + width + 'px &times; ' + height + 'px';
-            }
-        }
-
-        window.onload = updateScreenInfo;
-        window.onresize = updateScreenInfo;
-        updateScreenInfo();
-    </script>
 </body>
 </html>
